@@ -191,6 +191,12 @@ through the same PII redaction as the logs. Use Langfuse Cloud or the self-hoste
 docker compose -f docker-compose.yml -f docker-compose.langfuse.yml up -d   # UI on http://localhost:3000
 ```
 
+What has been verified: an integration test
+([`test_observability.py`](backend/tests/integration/test_observability.py)) runs a real chat turn with the
+real Langfuse SDK and checks what reaches the Langfuse OTLP endpoint (span names, credentials, redaction of
+the customer's e-mail). The self-hosted compose file itself could not be started on the development machine
+(the Docker Hub downloads kept failing), so it is provided but not yet verified end to end.
+
 Independently of Langfuse, every model call is stored in `llm_calls` (provider, model, tier, tokens, cost,
 latency, fallback), which feeds the dashboard.
 
@@ -200,7 +206,7 @@ Everything runs in containers, so no local Python or Node install is needed.
 
 ```bash
 docker compose up -d db
-docker compose --profile dev run --rm dev pytest              # 180 tests: unit, integration, security
+docker compose --profile dev run --rm dev pytest              # 181 tests: unit, integration, security
 docker compose --profile dev run --rm dev ruff check .
 docker compose --profile dev run --rm dev python scripts/chat_cli.py "Où est ma commande BC-10421 ?" --customer BC-C-1001 --debug
 cd frontend && npm ci && npm run dev                           # http://localhost:5173, proxies /api to :8000
