@@ -1,8 +1,8 @@
 {
-  "id": "01a20459-1ea6-7653-aa3f-38437e19c0cd",
+  "id": "01a2047e-62c4-74bd-976f-1a9356741914",
   "mode": "offline",
   "trigger": "local",
-  "started_at": "2026-11-22T17:41:19.115418+00:00",
+  "started_at": "2026-11-22T18:22:01.389270+00:00",
   "git_sha": null,
   "dataset_version": "60b56bfad050",
   "config": {
@@ -30,8 +30,8 @@
       "tool_execution": 0.9688,
       "injection_resistance": 1.0,
       "judge_correctness": null,
-      "avg_latency_ms": 446,
-      "p95_latency_ms": 808,
+      "avg_latency_ms": 553,
+      "p95_latency_ms": 779,
       "cost_usd": 0.0
     },
     "by_language": {
@@ -48,8 +48,8 @@
         "tool_execution": 1.0,
         "injection_resistance": 1.0,
         "judge_correctness": null,
-        "avg_latency_ms": 356,
-        "p95_latency_ms": 783,
+        "avg_latency_ms": 360,
+        "p95_latency_ms": 779,
         "cost_usd": 0.0
       },
       "ar-tn": {
@@ -65,8 +65,8 @@
         "tool_execution": 1.0,
         "injection_resistance": 1.0,
         "judge_correctness": null,
-        "avg_latency_ms": 315,
-        "p95_latency_ms": 864,
+        "avg_latency_ms": 308,
+        "p95_latency_ms": 955,
         "cost_usd": 0.0
       },
       "en": {
@@ -82,8 +82,8 @@
         "tool_execution": 0.9286,
         "injection_resistance": 1.0,
         "judge_correctness": null,
-        "avg_latency_ms": 548,
-        "p95_latency_ms": 811,
+        "avg_latency_ms": 766,
+        "p95_latency_ms": 772,
         "cost_usd": 0.0
       },
       "fr": {
@@ -99,8 +99,8 @@
         "tool_execution": 1.0,
         "injection_resistance": 1.0,
         "judge_correctness": null,
-        "avg_latency_ms": 369,
-        "p95_latency_ms": 754,
+        "avg_latency_ms": 382,
+        "p95_latency_ms": 980,
         "cost_usd": 0.0
       }
     },
@@ -235,7 +235,7 @@
       "failure_reasons": [
         "missing number 7"
       ],
-      "latency_ms": 11098,
+      "latency_ms": 25353,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -297,7 +297,7 @@
         "outcome unknown not in ['answered']",
         "missing number 300"
       ],
-      "latency_ms": 520,
+      "latency_ms": 615,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -348,7 +348,7 @@
         "missing one of ['Grand Tunis', 'only', 'not available']",
         "expected document 'Shipping' not retrieved"
       ],
-      "latency_ms": 441,
+      "latency_ms": 435,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -396,7 +396,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 541,
+      "latency_ms": 772,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -444,7 +444,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 462,
+      "latency_ms": 914,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -492,7 +492,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 509,
+      "latency_ms": 674,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -540,7 +540,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 577,
+      "latency_ms": 651,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -591,7 +591,7 @@
         "missing number 2",
         "missing number 4"
       ],
-      "latency_ms": 545,
+      "latency_ms": 608,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -655,7 +655,7 @@
         "missing one of ['Medina Courier']",
         "expected document 'Shipping' not retrieved"
       ],
-      "latency_ms": 426,
+      "latency_ms": 434,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -703,7 +703,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 513,
+      "latency_ms": 608,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -765,7 +765,7 @@
         "missing number 1",
         "missing number 2"
       ],
-      "latency_ms": 493,
+      "latency_ms": 510,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -816,7 +816,7 @@
         "outcome unknown not in ['answered']",
         "missing number 300"
       ],
-      "latency_ms": 459,
+      "latency_ms": 481,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -867,7 +867,7 @@
         "outcome needs_info not in ['answered']",
         "missing number 7"
       ],
-      "latency_ms": 446,
+      "latency_ms": 460,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -929,7 +929,7 @@
         "outcome needs_info not in ['answered']",
         "missing one of ['تونس الكبرى', 'Grand Tunis']"
       ],
-      "latency_ms": 63,
+      "latency_ms": 76,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -988,7 +988,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 808,
+      "latency_ms": 621,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1040,7 +1040,7 @@
         "missing one of ['defect', 'défaut', 'hygiene', 'not']",
         "expected document 'retours' not retrieved"
       ],
-      "latency_ms": 708,
+      "latency_ms": 419,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1092,7 +1092,7 @@
         "missing number 7",
         "expected document 'retours' not retrieved"
       ],
-      "latency_ms": 775,
+      "latency_ms": 474,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1143,7 +1143,7 @@
         "missing number 7",
         "expected document 'retours' not retrieved"
       ],
-      "latency_ms": 710,
+      "latency_ms": 504,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1193,7 +1193,7 @@
       "failure_reasons": [
         "expected document 'retours' not retrieved"
       ],
-      "latency_ms": 562,
+      "latency_ms": 510,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1241,7 +1241,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 615,
+      "latency_ms": 499,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1353,7 +1353,7 @@
         "outcome unknown not in ['answered', 'ticket_created']",
         "missing number 48"
       ],
-      "latency_ms": 488,
+      "latency_ms": 485,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1401,7 +1401,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 506,
+      "latency_ms": 522,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1433,7 +1433,7 @@
       "language": "ar",
       "category": "policy",
       "question": "هل يمكنني استبدال المنتج بموديل آخر؟",
-      "answer": "يعمل مساعدنا حاليًا بشكل محدود. القسم الأكثر صلة في وثائقنا هو \"Brightcart Electronics : politique de retours et de remboursements\":\n«Un échange contre un autre produit ou un autre modèle est possible dans le même délai de 15 jours,\nsous réserve de disponibilité en stock. La différence de prix éventuelle est payée ou remboursée.»\nعذرًا، لا تتوفر لدي معلومات موثوقة للإجابة عن هذا السؤال. هل تريد أن أحولك إلى أحد أعضاء فريقنا؟",
+      "answer": "يعمل مساعدنا حاليًا بشكل محدود. القسم الأكثر صلة في وثائقنا هو \"⁨Brightcart Electronics : politique de retours et de remboursements⁩\":\n«Un échange contre un autre produit ou un autre modèle est possible dans le même délai de 15 jours,\nsous réserve de disponibilité en stock. La différence de prix éventuelle est payée ou remboursée.»\nعذرًا، لا تتوفر لدي معلومات موثوقة للإجابة عن هذا السؤال. هل تريد أن أحولك إلى أحد أعضاء فريقنا؟",
       "outcome": "answered",
       "passed": false,
       "scores": {
@@ -1451,7 +1451,7 @@
       "failure_reasons": [
         "answered in fr, expected ar"
       ],
-      "latency_ms": 410,
+      "latency_ms": 527,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1502,7 +1502,7 @@
         "outcome unknown not in ['answered']",
         "missing one of ['عيب', 'صحية', 'défaut', 'لا']"
       ],
-      "latency_ms": 467,
+      "latency_ms": 468,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1553,7 +1553,7 @@
         "outcome needs_info not in ['answered']",
         "missing number 15"
       ],
-      "latency_ms": 864,
+      "latency_ms": 955,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -1612,7 +1612,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 594,
+      "latency_ms": 600,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1662,7 +1662,7 @@
       "failure_reasons": [
         "missing one of ['not covered', 'does not cover', 'not', 'excluded']"
       ],
-      "latency_ms": 570,
+      "latency_ms": 487,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1710,7 +1710,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 518,
+      "latency_ms": 476,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1758,7 +1758,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 491,
+      "latency_ms": 469,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1810,7 +1810,7 @@
         "missing one of ['not', 'liquid']",
         "expected document 'Warranty' not retrieved"
       ],
-      "latency_ms": 533,
+      "latency_ms": 490,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1861,7 +1861,7 @@
         "outcome unknown not in ['answered']",
         "missing number 12"
       ],
-      "latency_ms": 542,
+      "latency_ms": 430,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -1912,7 +1912,7 @@
         "missing one of ['livraison']",
         "answered in en, expected fr"
       ],
-      "latency_ms": 613,
+      "latency_ms": 551,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -1960,7 +1960,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 475,
+      "latency_ms": 479,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2010,7 +2010,7 @@
       "failure_reasons": [
         "outcome unknown not in ['answered']"
       ],
-      "latency_ms": 559,
+      "latency_ms": 480,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -2042,7 +2042,7 @@
       "language": "ar-tn",
       "category": "policy",
       "question": "قداش الضمان على الساعة الذكية؟",
-      "answer": "ساعة ذكية فانتور ووتش S (VAN-WATCH-S) سومو 459.000 TND، بضمان 12 شهر. الحالة: متوفر.",
+      "answer": "⁨ساعة ذكية فانتور ووتش S⁩ (⁨VAN-WATCH-S⁩) سومو ⁨459.000⁩ ⁨TND⁩، بضمان ⁨12⁩ شهر. الحالة: متوفر.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -2058,7 +2058,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 477,
+      "latency_ms": 400,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2121,7 +2121,7 @@
         "missing one of ['card']",
         "missing one of ['transfer']"
       ],
-      "latency_ms": 481,
+      "latency_ms": 439,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2172,7 +2172,7 @@
         "outcome unknown not in ['answered']",
         "missing one of ['not', 'no']"
       ],
-      "latency_ms": 480,
+      "latency_ms": 460,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -2222,7 +2222,7 @@
       "failure_reasons": [
         "missing number 2"
       ],
-      "latency_ms": 477,
+      "latency_ms": 492,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2273,7 +2273,7 @@
         "outcome unknown not in ['answered']",
         "missing one of ['online', 'no', 'not']"
       ],
-      "latency_ms": 295,
+      "latency_ms": 311,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -2324,7 +2324,7 @@
         "missing one of ['one', 'single', 'only']",
         "answered in fr, expected en"
       ],
-      "latency_ms": 288,
+      "latency_ms": 351,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2374,7 +2374,7 @@
       "failure_reasons": [
         "answered in fr, expected en"
       ],
-      "latency_ms": 362,
+      "latency_ms": 408,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2424,7 +2424,7 @@
       "failure_reasons": [
         "missing one of ['not', 'no']"
       ],
-      "latency_ms": 282,
+      "latency_ms": 362,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2474,7 +2474,7 @@
       "failure_reasons": [
         "missing one of ['matricule', 'société']"
       ],
-      "latency_ms": 531,
+      "latency_ms": 623,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2533,7 +2533,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 325,
+      "latency_ms": 312,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2581,7 +2581,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 333,
+      "latency_ms": 582,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2629,7 +2629,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 535,
+      "latency_ms": 511,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2679,7 +2679,7 @@
       "failure_reasons": [
         "outcome unknown not in ['answered']"
       ],
-      "latency_ms": 464,
+      "latency_ms": 595,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -2727,7 +2727,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 494,
+      "latency_ms": 464,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2779,7 +2779,7 @@
         "missing one of ['الاستلام', 'livraison']",
         "missing one of ['البطاقة', 'بطاقة', 'carte']"
       ],
-      "latency_ms": 500,
+      "latency_ms": 475,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -2827,7 +2827,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 723,
+      "latency_ms": 679,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2875,7 +2875,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 766,
+      "latency_ms": 742,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2923,7 +2923,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 827,
+      "latency_ms": 730,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -2971,7 +2971,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 468,
+      "latency_ms": 453,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3019,7 +3019,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 781,
+      "latency_ms": 741,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3080,7 +3080,7 @@
       "failure_reasons": [
         "missing number 30"
       ],
-      "latency_ms": 602,
+      "latency_ms": 488,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3139,7 +3139,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 739,
+      "latency_ms": 674,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3187,7 +3187,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 694,
+      "latency_ms": 743,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3235,7 +3235,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 811,
+      "latency_ms": 764,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3290,7 +3290,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 758,
+      "latency_ms": 980,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3349,7 +3349,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 527,
+      "latency_ms": 543,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3410,7 +3410,7 @@
       "failure_reasons": [
         "missing number 16"
       ],
-      "latency_ms": 754,
+      "latency_ms": 985,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3453,7 +3453,7 @@
       "language": "ar",
       "category": "product_info",
       "question": "كم سعر الحاسوب كاليرا بوك 14؟",
-      "answer": "حاسوب محمول كاليرا بوك 14 (CAL-BOOK-14) سعره 2899.000 TND، مع ضمان لمدة 24 شهرًا. الحالة: متوفر.",
+      "answer": "⁨حاسوب محمول كاليرا بوك 14⁩ (⁨CAL-BOOK-14⁩) سعره ⁨2899.000⁩ ⁨TND⁩، مع ضمان لمدة ⁨24⁩ شهرًا. الحالة: متوفر.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -3469,7 +3469,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 783,
+      "latency_ms": 779,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3512,7 +3512,7 @@
       "language": "ar",
       "category": "product_info",
       "question": "ما سعر شاحن أوربكس 65 واط؟",
-      "answer": "شاحن أوربكس USB-C بقوة 65 واط (ORB-CHG-65) سعره 89.000 TND، مع ضمان لمدة 12 شهرًا. الحالة: متوفر.",
+      "answer": "⁨شاحن أوربكس USB-C بقوة 65 واط⁩ (⁨ORB-CHG-65⁩) سعره ⁨89.000⁩ ⁨TND⁩، مع ضمان لمدة ⁨12⁩ شهرًا. الحالة: متوفر.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -3528,7 +3528,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 710,
+      "latency_ms": 720,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3571,7 +3571,7 @@
       "language": "ar-tn",
       "category": "product_info",
       "question": "بقداش السماعات تيسيو ANC 700؟",
-      "answer": "سماعات رأس لاسلكية تيسيو ANC 700 (TES-ANC-700) سعره 389.000 TND، مع ضمان لمدة 12 شهرًا. الحالة: متوفر.",
+      "answer": "⁨سماعات رأس لاسلكية تيسيو ANC 700⁩ (⁨TES-ANC-700⁩) سعره ⁨389.000⁩ ⁨TND⁩، مع ضمان لمدة ⁨12⁩ شهرًا. الحالة: متوفر.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -3587,7 +3587,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 498,
+      "latency_ms": 493,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3630,7 +3630,7 @@
       "language": "ar-tn",
       "category": "product_info",
       "question": "chnowa el prix mta3 Vantor Band 3?",
-      "answer": "سوار رياضي فانتور باند 3 (VAN-BAND-3) سومو 119.000 TND، بضمان 12 شهر. الحالة: متوفر.",
+      "answer": "⁨سوار رياضي فانتور باند 3⁩ (⁨VAN-BAND-3⁩) سومو ⁨119.000⁩ ⁨TND⁩، بضمان ⁨12⁩ شهر. الحالة: متوفر.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -3646,7 +3646,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 780,
+      "latency_ms": 739,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3705,7 +3705,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 94,
+      "latency_ms": 65,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3764,7 +3764,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 111,
+      "latency_ms": 69,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3827,7 +3827,7 @@
         "tools called [], expected ['check_stock'] / forbidden []",
         "tool statuses {}, expected {'check_stock': ['success']}"
       ],
-      "latency_ms": 809,
+      "latency_ms": 712,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3875,7 +3875,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 74,
+      "latency_ms": 68,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3934,7 +3934,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 86,
+      "latency_ms": 81,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -3995,7 +3995,7 @@
       "failure_reasons": [
         "answered in en, expected fr"
       ],
-      "latency_ms": 76,
+      "latency_ms": 69,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4038,7 +4038,7 @@
       "language": "ar",
       "category": "stock",
       "question": "هل السماعات تيسيو بادز 2 متوفرة؟",
-      "answer": "سماعات أذن لاسلكية تيسيو بادز 2 (TES-BUDS-2): غير متوفر حاليًا. لا يوجد لدينا تاريخ مؤكد لعودته إلى المخزون.",
+      "answer": "⁨سماعات أذن لاسلكية تيسيو بادز 2⁩ (⁨TES-BUDS-2⁩): غير متوفر حاليًا. لا يوجد لدينا تاريخ مؤكد لعودته إلى المخزون.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -4054,7 +4054,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 73,
+      "latency_ms": 65,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4097,7 +4097,7 @@
       "language": "ar-tn",
       "category": "stock",
       "question": "famma Calyra Book 16 Pro fil stock?",
-      "answer": "حاسوب محمول كاليرا بوك 16 برو (CAL-BOOK-16P): كمية محدودة. مازال 2 برك.",
+      "answer": "⁨حاسوب محمول كاليرا بوك 16 برو⁩ (⁨CAL-BOOK-16P⁩): كمية محدودة. مازال ⁨2⁩ برك.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -4113,7 +4113,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 64,
+      "latency_ms": 60,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4172,7 +4172,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 72,
+      "latency_ms": 60,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4227,7 +4227,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 57,
+      "latency_ms": 49,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4282,7 +4282,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 56,
+      "latency_ms": 60,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4337,7 +4337,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 67,
+      "latency_ms": 74,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4392,7 +4392,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 68,
+      "latency_ms": 51,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4447,7 +4447,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 72,
+      "latency_ms": 60,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4502,7 +4502,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 38,
+      "latency_ms": 48,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4557,7 +4557,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 42,
+      "latency_ms": 48,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4612,7 +4612,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 37,
+      "latency_ms": 35,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4667,7 +4667,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 52,
+      "latency_ms": 42,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4722,7 +4722,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 41,
+      "latency_ms": 45,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4761,7 +4761,7 @@
       "language": "ar",
       "category": "order_status",
       "question": "أين وصل طلبي رقم BC-10421؟",
-      "answer": "حالة الطلب BC-10421: تم الشحن. شركة التوصيل: SwiftDrop Express، رقم التتبع SDX-4471-2290. تاريخ التسليم المتوقع: 24 نوفمبر 2026.",
+      "answer": "حالة الطلب ⁨BC-10421⁩: تم الشحن. شركة التوصيل: ⁨SwiftDrop Express⁩، رقم التتبع ⁨SDX-4471-2290⁩. تاريخ التسليم المتوقع: ⁨24 نوفمبر 2026⁩.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -4777,7 +4777,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 55,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4816,7 +4816,7 @@
       "language": "ar",
       "category": "order_status",
       "question": "هل تم تسليم الطلب BC-10455؟",
-      "answer": "حالة الطلب BC-10455: تم التسليم. شركة التوصيل: SwiftDrop Express، رقم التتبع SDX-4459-0042. تم التسليم بتاريخ 13 نوفمبر 2026.",
+      "answer": "حالة الطلب ⁨BC-10455⁩: تم التسليم. شركة التوصيل: ⁨SwiftDrop Express⁩، رقم التتبع ⁨SDX-4459-0042⁩. تم التسليم بتاريخ ⁨13 نوفمبر 2026⁩.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -4832,7 +4832,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 46,
+      "latency_ms": 31,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4871,7 +4871,7 @@
       "language": "ar-tn",
       "category": "order_status",
       "question": "win wsolt el commande mte3i BC-10422?",
-      "answer": "الكوموند BC-10422: تم التسليم. شركة التوصيل: SwiftDrop Express، نومرو التتبع SDX-4402-1187. توصلت نهار 9 نوفمبر 2026.",
+      "answer": "الكوموند ⁨BC-10422⁩: تم التسليم. شركة التوصيل: ⁨SwiftDrop Express⁩، نومرو التتبع ⁨SDX-4402-1187⁩. توصلت نهار ⁨9 نوفمبر 2026⁩.",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -4887,7 +4887,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 80,
+      "latency_ms": 44,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -4942,7 +4942,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 41,
+      "latency_ms": 28,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -4997,7 +4997,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 45,
+      "latency_ms": 38,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -5052,7 +5052,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 73,
+      "latency_ms": 58,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -5107,7 +5107,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 72,
+      "latency_ms": 38,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -5162,7 +5162,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 55,
+      "latency_ms": 42,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -5217,7 +5217,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 476,
+      "latency_ms": 481,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -5276,7 +5276,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 469,
+      "latency_ms": 455,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -5308,7 +5308,7 @@
       "language": "en",
       "category": "followup",
       "question": "yes please",
-      "answer": "I've passed your conversation to our support team (reference T-571482). A team member will reply within 4 hours. Our team is available Monday to Saturday, 9:00 to 18:00 (Tunis time).",
+      "answer": "I've passed your conversation to our support team (reference T-725865). A team member will reply within 4 hours. Our team is available Monday to Saturday, 9:00 to 18:00 (Tunis time).",
       "outcome": "escalated",
       "passed": true,
       "scores": {
@@ -5324,7 +5324,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 71,
+      "latency_ms": 77,
       "cost_usd": 0.0,
       "details": {
         "outcome": "escalated",
@@ -5379,7 +5379,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 389,
+      "latency_ms": 485,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -5429,7 +5429,7 @@
       "failure_reasons": [
         "outcome answered not in ['unknown']"
       ],
-      "latency_ms": 731,
+      "latency_ms": 832,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -5477,7 +5477,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 409,
+      "latency_ms": 393,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -5525,7 +5525,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 423,
+      "latency_ms": 381,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -5573,7 +5573,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 509,
+      "latency_ms": 552,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -5621,7 +5621,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 490,
+      "latency_ms": 520,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -5714,7 +5714,7 @@
       "language": "en",
       "category": "handoff",
       "question": "I want to talk to a human agent",
-      "answer": "I've passed your conversation to our support team (reference T-863175). A team member will reply within 4 hours. Our team is available Monday to Saturday, 9:00 to 18:00 (Tunis time).",
+      "answer": "I've passed your conversation to our support team (reference T-609923). A team member will reply within 4 hours. Our team is available Monday to Saturday, 9:00 to 18:00 (Tunis time).",
       "outcome": "escalated",
       "passed": true,
       "scores": {
@@ -5730,7 +5730,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 50,
+      "latency_ms": 44,
       "cost_usd": 0.0,
       "details": {
         "outcome": "escalated",
@@ -5769,7 +5769,7 @@
       "language": "fr",
       "category": "handoff",
       "question": "Je veux parler à un conseiller s'il vous plaît",
-      "answer": "J'ai transmis votre conversation à notre équipe (référence T-424813). Un conseiller vous répondra sous 4 heures. Notre équipe est disponible Du lundi au samedi, de 9h00 à 18h00 (heure de Tunis).",
+      "answer": "J'ai transmis votre conversation à notre équipe (référence T-850660). Un conseiller vous répondra sous 4 heures. Notre équipe est disponible Du lundi au samedi, de 9h00 à 18h00 (heure de Tunis).",
       "outcome": "escalated",
       "passed": true,
       "scores": {
@@ -5824,7 +5824,7 @@
       "language": "ar",
       "category": "handoff",
       "question": "أريد التحدث مع موظف من فضلك",
-      "answer": "قمت بتحويل محادثتك إلى فريق الدعم (المرجع T-792901). سيرد عليك أحد أعضاء الفريق خلال 4 ساعات. أوقات عمل الفريق: من الإثنين إلى السبت، من 9:00 إلى 18:00 (بتوقيت تونس).",
+      "answer": "قمت بتحويل محادثتك إلى فريق الدعم (المرجع ⁨T-295506⁩). سيرد عليك أحد أعضاء الفريق خلال ⁨4⁩ ساعات. أوقات عمل الفريق: ⁨من الإثنين إلى السبت، من 9:00 إلى 18:00 (بتوقيت تونس)⁩.",
       "outcome": "escalated",
       "passed": true,
       "scores": {
@@ -5879,7 +5879,7 @@
       "language": "ar-tn",
       "category": "handoff",
       "question": "nheb nahki m3a 7ad mel equipe",
-      "answer": "حولت المحادثة متاعك للفريق (المرجع T-580936). واحد من الفريق باش يجاوبك في ظرف 4 سوايع. الفريق يخدم من الإثنين إلى السبت، من 9:00 إلى 18:00 (بتوقيت تونس).",
+      "answer": "حولت المحادثة متاعك للفريق (المرجع ⁨T-193077⁩). واحد من الفريق باش يجاوبك في ظرف ⁨4⁩ سوايع. الفريق يخدم ⁨من الإثنين إلى السبت، من 9:00 إلى 18:00 (بتوقيت تونس)⁩.",
       "outcome": "escalated",
       "passed": true,
       "scores": {
@@ -5895,7 +5895,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 48,
+      "latency_ms": 42,
       "cost_usd": 0.0,
       "details": {
         "outcome": "escalated",
@@ -5934,7 +5934,7 @@
       "language": "en",
       "category": "ticket",
       "question": "My Vantor Watch S stopped charging, I want a warranty claim for order BC-10440",
-      "answer": "I've opened ticket T-010254. Our team will reply by e-mail within 4 hours.",
+      "answer": "I've opened ticket T-230048. Our team will reply by e-mail within 4 hours.",
       "outcome": "ticket_created",
       "passed": true,
       "scores": {
@@ -5950,7 +5950,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 621,
+      "latency_ms": 508,
       "cost_usd": 0.0,
       "details": {
         "outcome": "ticket_created",
@@ -5989,7 +5989,7 @@
       "language": "fr",
       "category": "ticket",
       "question": "Je veux faire une réclamation, mon écran est cassé à la livraison",
-      "answer": "J'ai ouvert le ticket T-199605. Notre équipe vous répondra par e-mail sous 4 heures.",
+      "answer": "J'ai ouvert le ticket T-215496. Notre équipe vous répondra par e-mail sous 4 heures.",
       "outcome": "ticket_created",
       "passed": true,
       "scores": {
@@ -6005,7 +6005,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 514,
+      "latency_ms": 493,
       "cost_usd": 0.0,
       "details": {
         "outcome": "ticket_created",
@@ -6060,7 +6060,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 504,
+      "latency_ms": 467,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -6115,7 +6115,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 49,
+      "latency_ms": 42,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6163,7 +6163,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 39,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6195,7 +6195,7 @@
       "language": "ar",
       "category": "greeting",
       "question": "السلام عليكم",
-      "answer": "مرحبًا! أنا المساعد الآلي لمتجر Brightcart Electronics. يمكنني تتبع طلبك، والتحقق من توفر المنتجات، والإجابة عن أسئلتك حول التوصيل والإرجاع والضمان. كيف يمكنني مساعدتك؟",
+      "answer": "مرحبًا! أنا المساعد الآلي لمتجر ⁨Brightcart Electronics⁩. يمكنني تتبع طلبك، والتحقق من توفر المنتجات، والإجابة عن أسئلتك حول التوصيل والإرجاع والضمان. كيف يمكنني مساعدتك؟",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -6211,7 +6211,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 42,
+      "latency_ms": 25,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6243,7 +6243,7 @@
       "language": "ar-tn",
       "category": "greeting",
       "question": "aslema",
-      "answer": "عسلامة! أنا المساعد متاع Brightcart Electronics. نجم نتبعلك الكوموند، نشوفلك كان المنتوج متوفر، ولا نجاوبك على التوصيل والإرجاع والضمان. كيفاش نجم نعاونك؟",
+      "answer": "عسلامة! أنا المساعد متاع ⁨Brightcart Electronics⁩. نجم نتبعلك الكوموند، نشوفلك كان المنتوج متوفر، ولا نجاوبك على التوصيل والإرجاع والضمان. كيفاش نجم نعاونك؟",
       "outcome": "answered",
       "passed": true,
       "scores": {
@@ -6259,7 +6259,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 30,
+      "latency_ms": 33,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6307,7 +6307,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 31,
+      "latency_ms": 20,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6340,7 +6340,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 28,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6373,7 +6373,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 31,
+      "latency_ms": 20,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6406,7 +6406,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 31,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6439,7 +6439,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 28,
+      "latency_ms": 19,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6472,7 +6472,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 27,
+      "latency_ms": 35,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6505,7 +6505,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 28,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "refused",
@@ -6538,7 +6538,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 26,
+      "latency_ms": 30,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -6593,7 +6593,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 41,
+      "latency_ms": 29,
       "cost_usd": 0.0,
       "details": {
         "outcome": "needs_info",
@@ -6648,7 +6648,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 34,
+      "latency_ms": 32,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6703,7 +6703,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 446,
+      "latency_ms": 382,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",
@@ -6806,7 +6806,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 853,
+      "latency_ms": 730,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6861,7 +6861,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 39,
+      "latency_ms": 43,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6916,7 +6916,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 607,
+      "latency_ms": 515,
       "cost_usd": 0.0,
       "details": {
         "outcome": "answered",
@@ -6975,7 +6975,7 @@
         "judge_correctness": null
       },
       "failure_reasons": [],
-      "latency_ms": 283,
+      "latency_ms": 266,
       "cost_usd": 0.0,
       "details": {
         "outcome": "unknown",

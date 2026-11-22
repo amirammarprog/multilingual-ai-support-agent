@@ -1,10 +1,10 @@
 # Evaluation report: offline mode
 
-- Date: 2026-11-22T17:41:19.115418+00:00 · trigger: local · git: `n/a`
+- Date: 2026-11-22T18:22:01.389270+00:00 · trigger: local · git: `n/a`
 - Dataset: 130 cases, version `60b56bfad050`
 - Passed: **91/130 (70.0%)**
 - Planner/answers: offline: rule-based planner and deterministic templates, no LLM
-- Latency: avg 446 ms, p95 808 ms · model cost: $0.0000
+- Latency: avg 553 ms, p95 779 ms · model cost: $0.0000
 
 ## Metrics
 
@@ -67,7 +67,7 @@
 | `ret-fr-01` | Quel est le délai de retour ? | Notre assistant fonctionne en mode limité. La section la plus pertinente de nos documents est « الأسئلة الشائعة - برايتكارت للإلكترونيات » : «يمكنك إرجاع المنتج | expected document 'retours' not retrieved |
 | `ret-fr-03` | Les frais de livraison sont-ils remboursés en cas de retour ? | Je n'ai pas trouvé de produit correspondant dans notre catalogue. | missing one of ['défectueux', 'erreur'] |
 | `ret-fr-04` | Mon colis est arrivé abîmé, que faire ? | Je suis désolé, je n'ai pas d'information fiable pour répondre à cette question. Voulez-vous que je vous mette en relation avec un conseiller ? | outcome unknown not in ['answered', 'ticket_created']; missing number 48 |
-| `ret-ar-02` | هل يمكنني استبدال المنتج بموديل آخر؟ | يعمل مساعدنا حاليًا بشكل محدود. القسم الأكثر صلة في وثائقنا هو "Brightcart Electronics : politique de retours et de remboursements": «Un échange contre un autre | answered in fr, expected ar |
+| `ret-ar-02` | هل يمكنني استبدال المنتج بموديل آخر؟ | يعمل مساعدنا حاليًا بشكل محدود. القسم الأكثر صلة في وثائقنا هو "⁨Brightcart Electronics : politique de retours et de remboursements⁩": «Un échange contre un aut | answered in fr, expected ar |
 | `ret-tn-01` | نجم نرجع سماعات حليتهم؟ | سامحني، ما عنديش معلومة متأكد منها باش نجاوبك. تحب نحولك لواحد من الفريق متاعنا؟ | outcome unknown not in ['answered']; missing one of ['عيب', 'صحية', 'défaut', 'لا'] |
 | `ret-tn-02` | 9adech 3andi wa9t bech nraja3 produit? | شنوة المنتوج اللي تحكي عليه؟ عطيني الإسم متاعو ولا الرمز. | outcome needs_info not in ['answered']; missing number 15 |
 | `war-en-02` | Is a cracked screen covered by the warranty? | Our assistant is temporarily limited. The most relevant section of our documents is "Warranty Policy": «- Accidental damage such as drops, cracked or broken scr | missing one of ['not covered', 'does not cover', 'not', 'excluded'] |
