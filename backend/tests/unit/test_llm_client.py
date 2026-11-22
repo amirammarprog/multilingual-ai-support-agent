@@ -36,7 +36,7 @@ def make_client(handler) -> tuple[LLMClient, list[dict]]:
         seen.append({"host": request.url.host, "model": body["model"], "body": body})
         return handler(request, body)
 
-    settings = Settings(model_prices={"cheap-model": (1.0, 2.0)}, llm_timeout_seconds=5)
+    settings = Settings(model_prices={"cheap-model": (1.0, 2.0)}, llm_timeout_seconds=5, llm_retry_base_seconds=0.01)
     providers = [
         Provider("primary", "http://primary.test/v1", "k1", "cheap-model", "big-model"),
         Provider("fallback", "http://fallback.test/v1", "", "local-fast", "local-smart"),

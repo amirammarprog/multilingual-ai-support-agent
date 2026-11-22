@@ -59,6 +59,22 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.1
     # Local models (llama.cpp / Ollama) need the thinking switch turned off for Qwen3-style models.
     llm_disable_thinking: bool = False
+    # Optional "reasoning_effort" sent to reasoning models (e.g. "low"); empty = not sent.
+    llm_reasoning_effort: str = ""
+    # auto: strict JSON schema, switching to JSON mode for models that reject it.
+    llm_response_format: Literal["auto", "json_schema", "json_object"] = "auto"
+    # Free tiers: client-side request pacing (0 = none) and retries on 429 / 5xx / network errors.
+    llm_primary_requests_per_minute: int = 0
+    llm_fallback_requests_per_minute: int = 0
+    llm_max_retries: int = 4
+    llm_retry_base_seconds: float = 2.0
+    # A wait longer than this (a daily quota) fails the call instead of blocking.
+    llm_max_retry_wait_seconds: float = 90.0
+    # Evaluation judge. Empty JUDGE_MODEL = the primary provider's smart model.
+    judge_model: str = ""
+    judge_base_url: str = ""
+    judge_api_key: SecretStr = SecretStr("")
+    judge_requests_per_minute: int = 0
     # "auto" uses the complexity router; the other two force a tier (useful to compare in evals).
     router_mode: Literal["auto", "always_fast", "always_smart"] = "auto"
     router_smart_threshold: float = 0.5

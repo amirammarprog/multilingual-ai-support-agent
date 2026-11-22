@@ -3,6 +3,7 @@
 python -m app.cli bootstrap-db   create the database (if missing) and the application role
 python -m app.cli seed           load the fictional demo shops and knowledge base (idempotent)
 python -m app.cli create-staff   create an admin user for a shop
+python -m app.cli llm-check      check the LLM key, model names and the judge model
 """
 
 from __future__ import annotations
@@ -69,6 +70,7 @@ def main(argv: list[str] | None = None) -> None:
     staff.add_argument("--email", required=True)
     staff.add_argument("--name", required=True)
     staff.add_argument("--role", default="admin", choices=["admin", "agent", "viewer"])
+    sub.add_parser("llm-check", help="list provider models and test the configured fast/smart/judge models")
     args = parser.parse_args(argv)
 
     if args.command == "bootstrap-db":
@@ -84,6 +86,47 @@ def main(argv: list[str] | None = None) -> None:
 
         password = getpass.getpass("Password: ")
         asyncio.run(create_staff(args.shop, args.email, args.name, args.role, password))
+    elif args.command == "llm-check":
+        asyncio.run(llm_check())
+
+
+async def llm_check() -> None:
+    """List the models each configured provider offers, then send one small structured request per
+    tier (and to the judge), so a new key or model name is checked before a long evaluation run."""
+    from pydantic import BaseModel
+
+    from app.llm.client import LLMUnavailable, get_judge_llm, get_llm
+
+    class Ping(BaseModel):
+        language: str
+        answer: str
+
+    llm = get_llm()
+    if not llm.available:
+        raise SystemExit("No LLM provider configured: set LLM_PRIMARY_API_KEY (see .env.example).")
+    for provider, models in (await llm.list_models()).items():
+        print(f"{provider}: {len(models)} models available: {', '.join(models[:40])}")
+    messages = [
+        {"role": "system", "content": "Reply with JSON."},
+        {"role": "user", "content": "Detect the language of 'Où est ma commande ?' and say hello in it."},
+    ]
+    clients = [("fast", llm, "fast"), ("smart", llm, "smart"), ("judge", get_judge_llm(), "smart")]
+    for label, client, tier in clients:
+        try:
+            result, usages = await client.structured(
+                messages=messages,
+                schema=Ping,
+                tier=tier,  # type: ignore[arg-type]
+                purpose="check",
+                max_tokens=60,
+            )
+            used = usages[-1]
+            print(
+                f"{label}: OK with {used.provider}/{used.model} in {used.latency_ms} ms "
+                f"({used.retries} retries): {result.model_dump()}"
+            )
+        except LLMUnavailable as exc:
+            print(f"{label}: FAILED: {[u.error for u in exc.usages]}")
 
 
 if __name__ == "__main__":
