@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -29,7 +30,7 @@ from sqlalchemy import select
 from app.agent.service import handle_turn
 from app.config import get_settings
 from app.db import dispose_engine, tenant_session
-from app.llm.client import get_llm
+from app.llm.client import get_judge_llm, get_llm
 from app.models import Conversation, Customer, EvaluationResult, EvaluationRun, Shop
 from app.tools.registry import WIDGET_SCOPES
 from evals import judge as judge_module
@@ -126,6 +127,47 @@ def write_outputs(
             fh.write(markdown)
 
 
+def provider_failure(reply: Any) -> str | None:
+    """In full mode a case only counts if every model step succeeded (on the primary or fallback
+    provider). Otherwise the agent fell back to its no-LLM path, which is not what is being measured."""
+    usages = reply.debug.get("usages", [])
+    failed = {u["purpose"] for u in usages if not u["success"]} - {u["purpose"] for u in usages if u["success"]}
+    if failed:
+        errors = sorted({u["error"] or "error" for u in usages if not u["success"]})
+        return f"model call failed ({', '.join(sorted(failed))}): {'; '.join(errors)[:160]}"
+    if reply.debug.get("plan_source") == "heuristic":
+        return "planner fell back to rules"
+    return None
+
+
+def result_from_row(row: EvaluationResult) -> dict[str, Any]:
+    return {
+        "case_id": row.case_id,
+        "language": row.language,
+        "category": row.category,
+        "question": row.question,
+        "answer": row.answer,
+        "outcome": (row.details or {}).get("outcome"),
+        "passed": row.passed,
+        "scores": row.scores,
+        "failure_reasons": row.failure_reasons,
+        "latency_ms": row.latency_ms,
+        "cost_usd": float(row.cost_usd or 0),
+        "details": row.details,
+    }
+
+
+async def find_run(mode: str, resume: str) -> EvaluationRun | None:
+    async with tenant_session(None) as session:
+        if resume == "latest":
+            return await session.scalar(
+                select(EvaluationRun)
+                .where(EvaluationRun.mode == mode, EvaluationRun.status.in_(["running", "incomplete"]))
+                .order_by(EvaluationRun.started_at.desc())
+            )
+        return await session.get(EvaluationRun, uuid.UUID(resume))
+
+
 async def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="evals.run")
     parser.add_argument("--mode", choices=["offline", "full"], default="offline")
@@ -133,6 +175,13 @@ async def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ids", nargs="*", default=None, help="run only these case ids")
     parser.add_argument("--trigger", default=os.environ.get("EVAL_TRIGGER", "local"))
     parser.add_argument("--no-judge", action="store_true", help="full mode without the LLM judge")
+    parser.add_argument("--resume", metavar="RUN_ID", help="continue an interrupted run ('latest' or a run id)")
+    parser.add_argument(
+        "--max-new-cases",
+        type=int,
+        default=0,
+        help="stop after this many cases in this session (daily free-tier quotas); resume later",
+    )
     parser.add_argument("--min-pass-rate", type=float, default=0.0, help="exit 1 below this pass rate")
     parser.add_argument("--max-hallucination-rate", type=float, default=1.0)
     parser.add_argument("--no-write", action="store_true", help="do not overwrite evals/reports/*-latest.*")
@@ -140,7 +189,9 @@ async def main(argv: list[str] | None = None) -> int:
 
     settings = get_settings()
     llm = get_llm()
+    judge_llm = get_judge_llm()
     use_llm = args.mode == "full"
+    use_judge = use_llm and not args.no_judge
     if use_llm and not llm.available:
         print("full mode needs an LLM provider (LLM_PRIMARY_API_KEY or a local LLM_PRIMARY_BASE_URL)", file=sys.stderr)
         return 2
@@ -154,76 +205,133 @@ async def main(argv: list[str] | None = None) -> int:
         print("demo-shop not found: run `python -m app.cli seed` first", file=sys.stderr)
         return 2
 
+    judge_model = None
+    if use_judge:
+        judge_model = judge_llm.describe()[0]["smart"] if judge_llm.available else None
     config = {
         "description": (
             "LLM planner and responder, LLM judge"
+            if use_judge
+            else "LLM planner and responder"
             if use_llm
             else "offline: rule-based planner and deterministic templates, no LLM"
         ),
         "models": llm.describe() if use_llm else [],
-        "judge": None if (not use_llm or args.no_judge) else llm.describe()[0]["smart"],
+        "judge": judge_model,
         "router_mode": settings.router_mode,
         "embedding_model": settings.embedding_model,
         "reranker_model": settings.reranker_model,
         "retrieval_min_score": settings.retrieval_min_score,
     }
-    started_at = datetime.now(UTC)
-    async with tenant_session(None) as session:
-        run = EvaluationRun(
-            mode=args.mode,
-            trigger=args.trigger,
-            git_sha=git_sha(),
-            dataset_version=dataset_version(),
-            config=config,
-            total_cases=len(cases),
-            status="running",
-        )
-        session.add(run)
-        await session.commit()
-        run_id = run.id
 
-    results: list[dict[str, Any]] = []
-    for i, case in enumerate(cases, start=1):
-        reply, latency = await run_case(shop, case, use_llm)
+    if args.resume:
+        run = await find_run(args.mode, args.resume)
+        if run is None:
+            print(f"no {args.mode} run to resume ({args.resume})", file=sys.stderr)
+            return 2
+        if run.dataset_version != dataset_version():
+            print("the dataset changed since that run started; start a new run", file=sys.stderr)
+            return 2
+        run_id, started_at = run.id, run.started_at
+        async with tenant_session(None) as session:
+            done = set(
+                (await session.scalars(select(EvaluationResult.case_id).where(EvaluationResult.run_id == run_id))).all()
+            )
+            stored = await session.get(EvaluationRun, run_id)
+            assert stored is not None
+            stored.status = "running"
+            await session.commit()
+        print(f"resuming run {run_id}: {len(done)} cases already done")
+    else:
+        started_at = datetime.now(UTC)
+        async with tenant_session(None) as session:
+            run = EvaluationRun(
+                mode=args.mode,
+                trigger=args.trigger,
+                git_sha=git_sha(),
+                dataset_version=dataset_version(),
+                config=config,
+                total_cases=len(cases),
+                status="running",
+            )
+            session.add(run)
+            await session.commit()
+            run_id = run.id
+        done = set()
+
+    todo = [c for c in cases if c["id"] not in done]
+    incomplete: list[str] = []
+    attempted = 0
+    for i, case in enumerate(todo, start=1):
+        if args.max_new_cases and attempted >= args.max_new_cases:
+            incomplete += [c["id"] for c in todo[i - 1 :]]
+            break
+        attempted += 1
+        try:
+            reply, latency = await run_case(shop, case, use_llm)
+        except Exception as exc:  # one broken case must not lose the whole run
+            print(f"[{i:3}/{len(todo)}] ERROR {case['id']:<22} {type(exc).__name__}: {str(exc)[:100]}", flush=True)
+            incomplete.append(case["id"])
+            continue
+        problem = provider_failure(reply) if use_llm else None
         verdict = None
-        if use_llm and not args.no_judge:
-            verdict = await judge_module.judge(llm, case, reply.answer, reply.debug.get("evidence", ""))
+        if use_judge and problem is None:
+            verdict = await judge_module.judge(judge_llm, case, reply.answer, reply.debug.get("evidence", ""))
+            if verdict is None:
+                problem = "judge call failed"
+        if problem:
+            print(f"[{i:3}/{len(todo)}] SKIP  {case['id']:<22} {problem} (kept for --resume)", flush=True)
+            incomplete.append(case["id"])
+            continue
         evaluated = evaluate_case(case, reply, verdict)
         cost = sum(u["cost_usd"] for u in reply.debug.get("usages", [])) + (verdict or {}).get("cost_usd", 0.0)
-        results.append(
-            {
-                "case_id": case["id"],
-                "language": case["language"],
-                "category": case["category"],
-                "question": case["question"],
-                "answer": reply.answer,
-                "outcome": reply.outcome,
-                "passed": evaluated["passed"],
-                "scores": evaluated["scores"],
-                "failure_reasons": evaluated["reasons"],
-                "latency_ms": latency,
-                "cost_usd": cost,
-                "details": {
-                    "outcome": reply.outcome,
-                    "language": reply.language,
-                    "tools": [{"tool": t["tool"], "status": t["status"]} for t in reply.debug.get("tool_results", [])],
-                    "plan": reply.debug.get("plan"),
-                    "plan_source": reply.debug.get("plan_source"),
-                    "retrieval_confidence": (reply.debug.get("retrieval") or {}).get("confidence"),
-                    "judge": verdict,
-                },
-            }
-        )
+        async with tenant_session(None) as session:
+            session.add(
+                EvaluationResult(
+                    run_id=run_id,
+                    case_id=case["id"],
+                    language=case["language"],
+                    category=case["category"],
+                    question=case["question"],
+                    answer=reply.answer,
+                    passed=evaluated["passed"],
+                    scores=evaluated["scores"],
+                    failure_reasons=evaluated["reasons"],
+                    latency_ms=latency,
+                    cost_usd=Decimal(str(round(cost, 6))),
+                    details={
+                        "outcome": reply.outcome,
+                        "language": reply.language,
+                        "tools": [
+                            {"tool": t["tool"], "status": t["status"]} for t in reply.debug.get("tool_results", [])
+                        ],
+                        "plan": reply.debug.get("plan"),
+                        "plan_source": reply.debug.get("plan_source"),
+                        "retrieval_confidence": (reply.debug.get("retrieval") or {}).get("confidence"),
+                        "retries": sum(u.get("retries", 0) for u in reply.debug.get("usages", [])),
+                        "judge": verdict,
+                    },
+                )
+            )
+            await session.commit()
         mark = "PASS" if evaluated["passed"] else "FAIL"
         print(
-            f"[{i:3}/{len(cases)}] {mark} {case['id']:<22} {latency:>6} ms  {'; '.join(evaluated['reasons'])[:110]}",
+            f"[{i:3}/{len(todo)}] {mark} {case['id']:<22} {latency:>6} ms  {'; '.join(evaluated['reasons'])[:110]}",
             flush=True,
         )
 
-    metrics = aggregate(results)
-    previous = await previous_overall(args.mode)
+    async with tenant_session(None) as session:
+        rows = (
+            await session.scalars(
+                select(EvaluationResult).where(EvaluationResult.run_id == run_id).order_by(EvaluationResult.case_id)
+            )
+        ).all()
+    results = [result_from_row(r) for r in rows]
+    complete = not incomplete and len(results) == len(cases)
+    metrics = aggregate(results) if results else {"overall": {}}
     comparison = None
-    if previous:
+    previous = await previous_overall(args.mode) if complete else None
+    if previous and results:
         comparison = {
             k: {
                 "previous": previous[k],
@@ -237,27 +345,21 @@ async def main(argv: list[str] | None = None) -> int:
     passed = sum(1 for r in results if r["passed"])
 
     async with tenant_session(None) as session:
-        run = await session.get(EvaluationRun, run_id)
-        assert run is not None
-        run.status, run.finished_at, run.passed_cases, run.metrics = "completed", datetime.now(UTC), passed, metrics
-        for r in results:
-            session.add(
-                EvaluationResult(
-                    run_id=run_id,
-                    case_id=r["case_id"],
-                    language=r["language"],
-                    category=r["category"],
-                    question=r["question"],
-                    answer=r["answer"],
-                    passed=r["passed"],
-                    scores=r["scores"],
-                    details=r["details"],
-                    failure_reasons=r["failure_reasons"],
-                    latency_ms=r["latency_ms"],
-                    cost_usd=Decimal(str(round(r["cost_usd"], 6))),
-                )
-            )
+        stored = await session.get(EvaluationRun, run_id)
+        assert stored is not None
+        stored.status = "completed" if complete else "incomplete"
+        stored.finished_at = datetime.now(UTC) if complete else None
+        stored.passed_cases, stored.metrics, stored.total_cases = passed, metrics, len(cases)
         await session.commit()
+
+    await dispose_engine()
+    if not complete:
+        print(
+            f"\nrun {run_id} is incomplete: {len(results)}/{len(cases)} cases stored, {len(incomplete)} left "
+            f"(rate limits, quota or provider errors). Continue with:\n"
+            f"  python -m evals.run --mode {args.mode} --resume {run_id}"
+        )
+        return 3
 
     summary = {
         "id": str(run_id),
@@ -278,7 +380,6 @@ async def main(argv: list[str] | None = None) -> int:
         f"\n{passed}/{len(cases)} passed · pass rate {o['pass_rate']:.3f} · hallucination rate "
         f"{o['hallucination_rate']:.3f} · run {run_id}"
     )
-    await dispose_engine()
     if o["pass_rate"] < args.min_pass_rate or o["hallucination_rate"] > args.max_hallucination_rate:
         print("quality gate failed", file=sys.stderr)
         return 1

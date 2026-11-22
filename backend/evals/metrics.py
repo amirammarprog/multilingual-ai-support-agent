@@ -193,6 +193,10 @@ def aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
         out["avg_latency_ms"] = round(statistics.fmean(latencies)) if latencies else 0
         out["p95_latency_ms"] = latencies[min(len(latencies) - 1, int(0.95 * len(latencies)))] if latencies else 0
         out["cost_usd"] = round(sum(r["cost_usd"] for r in rows), 6)
+        # How often the LLM judge reaches the same verdict as the deterministic checks: a weak judge
+        # model shows up here instead of silently inflating or deflating the correctness score.
+        pairs = [(r["scores"].get("judge_correctness"), r["scores"].get("correctness")) for r in rows]
+        out["judge_agreement"] = _mean([1.0 if j == c else 0.0 for j, c in pairs if j is not None and c is not None])
         return out
 
     by_language: dict[str, list] = {}

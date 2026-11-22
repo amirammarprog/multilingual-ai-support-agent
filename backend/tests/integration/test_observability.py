@@ -59,6 +59,7 @@ async def test_chat_turn_is_traced_to_langfuse_with_redaction(receiver, settings
         if received:
             break
         await asyncio.sleep(0.25)
+    tracer.client.shutdown()  # stop the exporter before the receiver goes away
 
     assert received, "no trace was exported"
     paths = {path for path, _, _ in received}

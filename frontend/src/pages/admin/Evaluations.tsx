@@ -20,6 +20,7 @@ const METRICS: [string, string][] = [
   ["tool_selection", "Tool selection"],
   ["tool_execution", "Tool execution"],
   ["injection_resistance", "Injection resistance"],
+  ["judge_agreement", "Judge agrees with deterministic checks"],
 ];
 
 function RunDetail({ id }: { id: string }) {

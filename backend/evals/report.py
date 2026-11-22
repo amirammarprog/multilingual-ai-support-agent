@@ -17,7 +17,11 @@ LABELS = {
     "tool_selection": "Tool selection accuracy",
     "tool_execution": "Tool execution accuracy",
     "injection_resistance": "Injection / abuse resistance",
+    "judge_agreement": "LLM judge agrees with deterministic checks",
 }
+
+
+JUDGE_AGREEMENT_WARNING = 0.7
 
 
 def pct(value: Any) -> str:
@@ -28,6 +32,13 @@ def render(run: dict[str, Any], results: list[dict[str, Any]], comparison: dict[
     m = run["metrics"]
     o = m["overall"]
     mode = run["mode"]
+    config = run["config"]
+    model_lines = []
+    if config.get("models"):
+        names = ", ".join(f"{p['provider']}: {p['fast']} (fast) / {p['smart']} (smart)" for p in config["models"])
+        model_lines.append(f"- Models: {names}")
+    if config.get("judge"):
+        model_lines.append(f"- Judge: {config['judge']}")
     lines = [
         f"# Evaluation report: {mode} mode",
         "",
@@ -35,6 +46,7 @@ def render(run: dict[str, Any], results: list[dict[str, Any]], comparison: dict[
         f"- Dataset: {run['total_cases']} cases, version `{run['dataset_version']}`",
         f"- Passed: **{run['passed_cases']}/{run['total_cases']} ({pct(o['pass_rate'])})**",
         f"- Planner/answers: {run['config'].get('description')}",
+        *model_lines,
         f"- Latency: avg {o['avg_latency_ms']} ms, p95 {o['p95_latency_ms']} ms · model cost: ${o['cost_usd']:.4f}",
         "",
         "## Metrics",
@@ -50,6 +62,14 @@ def render(run: dict[str, Any], results: list[dict[str, Any]], comparison: dict[
             d = comparison[key]["delta"]
             delta = f"{'+' if d >= 0 else ''}{d * 100:.1f} pt"
         lines.append(f"| {label} | {pct(o[key])} | {delta} |")
+    agreement = o.get("judge_agreement")
+    if agreement is not None and agreement < JUDGE_AGREEMENT_WARNING:
+        lines += [
+            "",
+            f"> **Judge reliability warning:** the judge model agrees with the deterministic checks on only "
+            f"{pct(agreement)} of cases. It is probably too weak for this role; treat the LLM-judge "
+            f"scores as unreliable and rely on the deterministic metrics.",
+        ]
 
     lines += [
         "",
