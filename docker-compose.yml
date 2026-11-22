@@ -28,6 +28,7 @@ x-backend-env: &backend-env
   LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
   LANGFUSE_HOST: ${LANGFUSE_HOST:-http://langfuse-web:3000}
   MODEL_CACHE_DIR: /models
+  SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD:-}
 
 services:
   db:
@@ -59,7 +60,7 @@ services:
     image: support-agent-backend:latest
     environment: *backend-env
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
       - models:/models
     depends_on:
@@ -72,14 +73,14 @@ services:
       args:
         VITE_API_URL: ""
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${WEB_PORT:-8080}:8080"
     depends_on:
       api: { condition: service_started }
     restart: unless-stopped
 
   # Optional local LLM (no API key needed): an OpenAI-compatible llama.cpp server.
   # Start with:  docker compose --profile local-llm up -d
-  # Then set LLM_PRIMARY_BASE_URL=http://llm:8081/v1 in .env (see README).
+  # Then set LLM_PRIMARY_BASE_URL=http://llm:8080/v1 in .env (see README).
   llm:
     profiles: ["local-llm"]
     image: ghcr.io/ggml-org/llama.cpp:server
@@ -91,7 +92,7 @@ services:
       - "--host"
       - "0.0.0.0"
       - "--port"
-      - "8081"
+      - "8080"
       - "--ctx-size"
       - "${LOCAL_LLM_CTX:-8192}"
       - "--parallel"
@@ -102,7 +103,7 @@ services:
     volumes:
       - models:/models
     ports:
-      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:8081:8080"
     restart: unless-stopped
 
   # Development helper: tests, linting and the eval runner with the source mounted.

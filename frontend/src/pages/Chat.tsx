@@ -109,7 +109,7 @@ export default function ChatPage() {
         <Card>
           <div className="space-y-4 text-sm">
             <label className="block">
-              <span className="mb-1 block font-medium">Shop</span>
+              <span className="mb-1 block font-medium">{t("chat_shop")}</span>
               <select value={shop} onChange={(e) => { setShop(e.target.value); setCustomer(""); }} className="w-full rounded-md border border-slate-300 bg-transparent px-2 py-1.5 dark:border-slate-700">
                 {SHOPS.map((s) => (
                   <option key={s.slug} value={s.slug}>{s.label}</option>
@@ -124,9 +124,7 @@ export default function ChatPage() {
                   <option key={c.external_ref} value={c.external_ref}>{c.name} ({c.external_ref})</option>
                 ))}
               </select>
-              <span className="mt-1 block text-xs text-slate-500">
-                Signed-in visitors are vouched for by a token signed with the shop's secret (simulated here).
-              </span>
+              <span className="mt-1 block text-xs text-slate-500">{t("chat_identity_hint")}</span>
             </label>
             <label className="block">
               <span className="mb-1 block font-medium">{t("chat_language")}</span>
@@ -140,7 +138,7 @@ export default function ChatPage() {
           </div>
         </Card>
         <Card>
-          <p className="mb-2 text-sm font-medium">Try</p>
+          <p className="mb-2 text-sm font-medium">{t("chat_try")}</p>
           <ul className="space-y-1.5" dir={lang === "ar" ? "rtl" : "ltr"}>
             {(SUGGESTIONS[shop] ?? []).map((s) => (
               <li key={s}>

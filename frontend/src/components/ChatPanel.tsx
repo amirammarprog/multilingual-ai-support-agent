@@ -129,9 +129,30 @@ export function ChatPanel({
   const [failed, setFailed] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [items, busy]);
+  useEffect(() => {
+    // Braces matter: newer browsers return a promise from scrollIntoView, which React would treat as a cleanup.
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [items, busy]);
 
   const push = (item: ChatItem) => onItems((prev) => [...prev, item]);
+
+  // Replies typed by a human agent in the admin console arrive through polling.
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const human = (await client.history()).filter((m) => m.role === "human_agent");
+        onItems((prev) => {
+          const known = new Set(prev.map((i) => i.id));
+          const fresh = human.filter((m) => !known.has(m.id));
+          return fresh.length ? [...prev, ...fresh.map((m) => ({ id: m.id, role: m.role, content: m.content, language: m.language }))] : prev;
+        });
+      } catch {
+        /* transient: try again on the next tick */
+      }
+    }, 10_000);
+    return () => window.clearInterval(timer);
+  }, [client, ready, onItems]);
 
   useEffect(() => {
     if (queued && ready && !busy) {

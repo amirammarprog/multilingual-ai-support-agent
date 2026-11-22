@@ -16,6 +16,7 @@ const STRINGS = {
     chat_voice_unsupported: "Voice input is not available in this browser.",
     in_stock: "In stock", low_stock: "Low stock", out_of_stock: "Out of stock",
     theme: "Toggle dark mode", ui_language: "Interface language",
+    chat_shop: "Shop", chat_try: "Try", chat_identity_hint: "Signed-in visitors are vouched for by a token signed with the shop's secret (simulated here).",
   },
   fr: {
     nav_home: "Présentation", nav_chat: "Démo en direct", nav_store: "Boutique de démo", nav_admin: "Administration",
@@ -30,6 +31,7 @@ const STRINGS = {
     chat_voice_unsupported: "La saisie vocale n'est pas disponible dans ce navigateur.",
     in_stock: "En stock", low_stock: "Stock faible", out_of_stock: "Rupture de stock",
     theme: "Basculer le mode sombre", ui_language: "Langue de l'interface",
+    chat_shop: "Boutique", chat_try: "Essayez", chat_identity_hint: "Un visiteur connecté est garanti par un jeton signé avec le secret de la boutique (simulé ici).",
   },
   ar: {
     nav_home: "نظرة عامة", nav_chat: "تجربة مباشرة", nav_store: "متجر تجريبي", nav_admin: "الإدارة",
@@ -44,6 +46,7 @@ const STRINGS = {
     chat_voice_unsupported: "الإدخال الصوتي غير متاح في هذا المتصفح.",
     in_stock: "متوفر", low_stock: "كمية محدودة", out_of_stock: "غير متوفر",
     theme: "تبديل الوضع الداكن", ui_language: "لغة الواجهة",
+    chat_shop: "المتجر", chat_try: "جرّب", chat_identity_hint: "يُثبت المتجر هوية الزائر المتصل برمز موقّع بسرّه الخاص (محاكاة هنا).",
   },
 } as const;
 

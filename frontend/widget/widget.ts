@@ -195,7 +195,8 @@ class SupportWidget {
     this.poll = window.setInterval(async () => {
       if (this.panel.hidden || this.busy) return;
       try {
-        (await this.client.history()).forEach((m) => this.render(m));
+        // Only human replies are new here: the visitor's and the assistant's messages are already shown.
+        (await this.client.history()).filter((m) => m.role === "human_agent").forEach((m) => this.render(m));
       } catch {
         /* transient */
       }
