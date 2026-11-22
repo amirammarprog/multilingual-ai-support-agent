@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     llm_disable_thinking: bool = False
     # Optional "reasoning_effort" sent to reasoning models (e.g. "low"); empty = not sent.
     llm_reasoning_effort: str = ""
+    # Reasoning models spend output tokens on hidden reasoning before the JSON answer; this budget is
+    # added to every call's output limit (e.g. 1024 for gpt-oss / qwen3 models).
+    llm_extra_output_tokens: int = 0
     # auto: strict JSON schema, switching to JSON mode for models that reject it.
     llm_response_format: Literal["auto", "json_schema", "json_object"] = "auto"
     # Free tiers: client-side request pacing (0 = none) and retries on 429 / 5xx / network errors.

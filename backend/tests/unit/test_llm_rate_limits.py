@@ -113,3 +113,52 @@ async def test_reasoning_effort_is_sent_only_when_configured():
     plain, seen_plain = client(ok)
     await plain.structured(messages=MESSAGES, schema=Answer, tier="fast", purpose="respond")
     assert "reasoning_effort" not in seen_plain[0]["body"]
+
+
+def invalid_generation() -> httpx.Response:
+    # Groq's reply when a reasoning model runs out of tokens before writing the JSON answer.
+    return httpx.Response(
+        400,
+        json={
+            "error": {
+                "message": "Generated JSON does not match the expected schema. Please adjust your prompt.",
+                "type": "invalid_request_error",
+                "code": "json_validate_failed",
+                "failed_generation": "",
+            }
+        },
+    )
+
+
+async def test_rejected_generation_is_retried_once_on_the_capable_model_with_a_larger_budget():
+    llm, seen = client(lambda req, body, n: invalid_generation() if n == 1 else ok())
+    answer, usages = await llm.structured(messages=MESSAGES, schema=Answer, tier="fast", purpose="respond")
+    assert answer.answered and len(seen) == 2
+    assert [s["body"]["model"] for s in seen] == ["small", "big"]
+    assert seen[1]["body"]["max_tokens"] > seen[0]["body"]["max_tokens"]
+    assert seen[1]["body"]["response_format"]["type"] == "json_schema"  # not mistaken for "schema unsupported"
+    assert (usages[0].model, usages[0].tier, usages[0].retries, usages[0].success) == ("big", "smart", 1, True)
+
+
+async def test_rejected_generation_on_the_capable_model_is_retried_on_the_same_model():
+    llm, seen = client(lambda req, body, n: invalid_generation() if n == 1 else ok())
+    await llm.structured(messages=MESSAGES, schema=Answer, tier="smart", purpose="respond")
+    assert [s["body"]["model"] for s in seen] == ["big", "big"]
+
+
+async def test_a_second_rejected_generation_moves_on_to_the_fallback():
+    def handler(req, body, n):
+        return invalid_generation() if req.url.host == "free.test" else ok()
+
+    llm, seen = client(handler, fallback=True)
+    _, usages = await llm.structured(messages=MESSAGES, schema=Answer, tier="fast", purpose="respond")
+    assert [s["host"] for s in seen] == ["free.test", "free.test", "other.test"]  # no retry loop
+    assert [(u.provider, u.success) for u in usages] == [("primary", False), ("fallback", True)]
+
+
+async def test_extra_output_tokens_are_added_to_every_call():
+    plain, seen_plain = client(ok)
+    await plain.structured(messages=MESSAGES, schema=Answer, tier="fast", purpose="respond")
+    llm, seen = client(ok, llm_extra_output_tokens=1024)
+    await llm.structured(messages=MESSAGES, schema=Answer, tier="fast", purpose="respond")
+    assert seen[0]["body"]["max_tokens"] == seen_plain[0]["body"]["max_tokens"] + 1024

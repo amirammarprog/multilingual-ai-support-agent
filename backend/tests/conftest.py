@@ -17,6 +17,21 @@ os.environ.setdefault("JWT_SECRET", "test-secret-" + "x" * 40)
 os.environ["LLM_PRIMARY_API_KEY"] = ""
 os.environ["LLM_PRIMARY_BASE_URL"] = "https://api.openai.com/v1"
 os.environ["LLM_FALLBACK_BASE_URL"] = ""
+# Provider tuning from a local .env (free-tier presets) must not change what the tests send.
+os.environ.update(
+    {
+        "LLM_REASONING_EFFORT": "",
+        "LLM_EXTRA_OUTPUT_TOKENS": "0",
+        "LLM_RESPONSE_FORMAT": "auto",
+        "LLM_PRIMARY_REQUESTS_PER_MINUTE": "0",
+        "LLM_FALLBACK_REQUESTS_PER_MINUTE": "0",
+        "LLM_MAX_RETRY_WAIT_SECONDS": "90",
+        "JUDGE_MODEL": "",
+        "JUDGE_BASE_URL": "",
+        "JUDGE_API_KEY": "",
+        "JUDGE_REQUESTS_PER_MINUTE": "0",
+    }
+)
 os.environ["LANGFUSE_PUBLIC_KEY"] = ""
 
 import uuid

@@ -158,6 +158,9 @@ def strict_schema(model: type[BaseModel]) -> dict[str, Any]:
 
 
 _THINK = re.compile(r"<think>.*?</think>", re.DOTALL)
+# Provider-side rejection of the model's output (e.g. Groq json_validate_failed: the model ran out of
+# tokens after hidden reasoning, or wrote JSON that does not match the schema).
+_INVALID_GENERATION = re.compile(r"json_validate_failed|does not match the expected schema|failed_generation", re.I)
 
 
 def _extract_json(text: str) -> str:
@@ -287,6 +290,7 @@ class LLMClient:
             )
             kwargs["messages"] = [{**messages[0], "content": messages[0]["content"] + hint}, *messages[1:]]
             kwargs["response_format"] = {"type": "json_object"}
+        max_tokens += self.settings.llm_extra_output_tokens  # room for hidden reasoning tokens
         if provider.is_openai:
             kwargs["max_completion_tokens"] = max_tokens
         else:
@@ -320,19 +324,40 @@ class LLMClient:
                             provider, self._request(provider, messages, schema, tier, max_tokens), usage
                         )
                     except BadRequestError as exc:
-                        # Some models reject strict JSON schema: switch this provider to JSON mode once.
-                        unsupported = re.search(r"response_format|json_schema|structured", str(exc), re.I)
-                        if not (
-                            unsupported
-                            and self.settings.llm_response_format == "auto"
-                            and self._json_mode[provider.name] == "json_schema"
-                        ):
-                            raise
-                        self._json_mode[provider.name] = "json_object"
-                        log.info("llm_json_mode_fallback", provider=provider.name, model=model)
-                        response = await self._send(
-                            provider, self._request(provider, messages, schema, tier, max_tokens), usage
-                        )
+                        if _INVALID_GENERATION.search(str(exc)):
+                            # The provider refused the output (out of tokens after hidden reasoning, or JSON
+                            # that does not match the schema): one more try, on the capable model when the
+                            # cheap one failed, with a larger output budget.
+                            retry_tier: Tier = "smart" if tier == "fast" else tier
+                            usage.retries += 1
+                            log.info(
+                                "llm_regenerate",
+                                provider=provider.name,
+                                model=model,
+                                retry_model=provider.model_for(retry_tier),
+                                purpose=purpose,
+                            )
+                            model = provider.model_for(retry_tier)
+                            usage.model, usage.tier = model, retry_tier
+                            response = await self._send(
+                                provider,
+                                self._request(provider, messages, schema, retry_tier, max_tokens * 2 + 512),
+                                usage,
+                            )
+                        else:
+                            # Some models reject strict JSON schema: switch this provider to JSON mode once.
+                            unsupported = re.search(r"response_format|json_schema|structured", str(exc), re.I)
+                            if not (
+                                unsupported
+                                and self.settings.llm_response_format == "auto"
+                                and self._json_mode[provider.name] == "json_schema"
+                            ):
+                                raise
+                            self._json_mode[provider.name] = "json_object"
+                            log.info("llm_json_mode_fallback", provider=provider.name, model=model)
+                            response = await self._send(
+                                provider, self._request(provider, messages, schema, tier, max_tokens), usage
+                            )
                     content = response.choices[0].message.content or ""
                     if response.usage:
                         usage.prompt_tokens = response.usage.prompt_tokens or 0
@@ -367,6 +392,8 @@ class LLMClient:
                         model=model,
                         purpose=purpose,
                         error=usage.error,
+                        # The provider's own explanation (e.g. which parameter it rejected); redacted by the logger.
+                        detail=str(getattr(exc, "message", "") or exc)[:300],
                         retries=usage.retries,
                     )
         raise LLMUnavailable(usages)

@@ -215,7 +215,9 @@ provider's console.
 
 How free tiers are handled: requests are paced per provider; 429, 5xx and network errors are retried with
 exponential backoff that honours `Retry-After`; a wait longer than `LLM_MAX_RETRY_WAIT_SECONDS` (a daily
-quota) fails fast. In the evaluation, a case where a model call failed is not scored on the no-LLM fallback:
+quota) fails fast. Reasoning models (gpt-oss, Qwen3) spend output tokens on hidden reasoning before the
+JSON answer, so `LLM_EXTRA_OUTPUT_TOKENS` adds headroom to every call, and an output the provider rejects
+as invalid JSON is regenerated once with a larger budget. In the evaluation, a case where a model call failed is not scored on the no-LLM fallback:
 it stays pending and the run is marked incomplete until `--resume` finishes it. Expect roughly 3–4 model
 calls per case (planner, responder, sometimes a second responder attempt, judge), so about 400–500 requests
 for the 130 cases.
@@ -226,8 +228,8 @@ shows how often its verdict agrees with the deterministic checks and prints a wa
 
 **GitHub Actions.** In the repository settings (Settings → Secrets and variables → Actions), create the
 secret `LLM_PRIMARY_API_KEY`, and the variables `LLM_PRIMARY_BASE_URL`, `LLM_PRIMARY_FAST_MODEL`,
-`LLM_PRIMARY_SMART_MODEL`, `LLM_PRIMARY_REQUESTS_PER_MINUTE` and, optionally, `JUDGE_MODEL` and
-`LLM_REASONING_EFFORT`. Then run the **Evaluation** workflow by hand with mode `full`. It never runs on
+`LLM_PRIMARY_SMART_MODEL`, `LLM_PRIMARY_REQUESTS_PER_MINUTE` and, optionally, `JUDGE_MODEL`,
+`LLM_REASONING_EFFORT` and `LLM_EXTRA_OUTPUT_TOKENS`. Then run the **Evaluation** workflow by hand with mode `full`. It never runs on
 push, so free quotas are not spent on every commit.
 
 ### Observability (Langfuse)

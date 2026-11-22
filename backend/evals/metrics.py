@@ -54,6 +54,59 @@ def _norm(text: str) -> str:
     return text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")).lower()
 
 
+# Numbers written as words. Models often write "two business days", "deux jours" or "يومين" (Arabic dual
+# form: "two days"), which is as correct as "2". Used only to check that an expected number is present;
+# the hallucination guard still reads digits only.
+_WORD_NUMBERS = {
+    # English
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+    "ten": 10, "eleven": 11, "twelve": 12, "fourteen": 14, "fifteen": 15, "twenty": 20, "thirty": 30,
+    "twenty-four": 24, "forty-eight": 48,
+    # French ("un"/"une" are articles too: see _FR_ONE)
+    "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "sept": 7, "huit": 8, "neuf": 9, "dix": 10,
+    "onze": 11, "douze": 12, "quatorze": 14, "quinze": 15, "vingt": 20, "trente": 30,
+    "vingt-quatre": 24, "quarante-huit": 48,
+    # Arabic, normalised (no hamza on alef, no diacritics), with Tunisian forms (زوز, تلاثة, اثناش, خمسطاش)
+    "واحد": 1, "واحدة": 1, "اثنان": 2, "اثنين": 2, "اثنتين": 2, "زوز": 2, "ثلاثة": 3, "ثلاث": 3,
+    "تلاثة": 3, "اربعة": 4, "اربع": 4, "خمسة": 5, "خمس": 5, "ستة": 6, "سبعة": 7, "سبع": 7,
+    "ثمانية": 8, "تسعة": 9, "عشرة": 10, "عشرين": 20, "عشرون": 20, "ثلاثين": 30, "ثلاثون": 30,
+    "اثنا عشر": 12, "اثني عشر": 12, "اثناش": 12, "ثناش": 12, "اربعة عشر": 14, "اربع عشرة": 14,
+    "خمسة عشر": 15, "خمس عشرة": 15, "خمسطاش": 15, "خمستاش": 15,
+    # Arabic dual of time units: "two days", "two weeks", "two hours", "two months", "two years"
+    "يومين": 2, "يومان": 2, "اسبوعين": 2, "ساعتين": 2, "شهرين": 2, "سنتين": 2, "عامين": 2,
+}  # fmt: skip
+_AR_PREFIX = "[وبلف]?"
+_WORD_NUMBER = re.compile(
+    r"(?<![\w-])(?:"
+    + "|".join(
+        (_AR_PREFIX if re.search(r"[؀-ۿ]", w) else "") + re.escape(w)
+        for w in sorted(_WORD_NUMBERS, key=len, reverse=True)
+    )
+    + r")(?![\w-])"
+)
+# "un"/"une" count as 1 before a time unit or as the start of a range ("un à deux jours", "entre un et deux").
+_FR_ONE = re.compile(r"(?<!\w)une?\s+(?:(?:jours?|semaines?|heures?|mois|ans?|années?)\b|(?:à|a|et|ou)\s+\w)")
+# An Arabic time unit opening a range means one: "من يوم إلى يومين" (one to two days).
+_AR_ONE = re.compile(r"(?<!\w)[وبلف]?(?:يوم|اسبوع|ساعة|شهر)\s+(?:الى|او|-|–)\s")
+
+
+def spelled_numbers(text: str) -> set[str]:
+    """Values of numbers written as words in English, French or Arabic (incl. Tunisian)."""
+    text = re.sub(r"[ً-ْـ]", "", text.lower())  # Arabic diacritics and tatweel
+    text = re.sub("[أإآ]", "ا", text)
+    found = set()
+    for match in _WORD_NUMBER.finditer(text):
+        word = match.group(0)
+        if word not in _WORD_NUMBERS and word[1:] in _WORD_NUMBERS:
+            word = word[1:]  # Arabic one-letter prefix (و, ب, ل, ف)
+        if word == "one" and text[match.end() : match.end() + 3] == " of":
+            continue  # "one of our team"
+        found.add(str(_WORD_NUMBERS[word]))
+    if _FR_ONE.search(text) or _AR_ONE.search(text):
+        found.add("1")
+    return found
+
+
 def date_mentioned(answer: str, iso: str) -> bool:
     _year, month, day = (int(x) for x in iso.split("-"))
     text = _norm(answer)
@@ -73,7 +126,7 @@ def evaluate_case(case: dict[str, Any], reply: Any, judge: dict[str, Any] | None
     outcome_ok = not expect.get("outcome") or reply.outcome in expect["outcome"]
     if not outcome_ok:
         reasons.append(f"outcome {reply.outcome} not in {expect['outcome']}")
-    answer_numbers = _numbers(answer)
+    answer_numbers = _numbers(answer) | spelled_numbers(answer)
     for n in expect.get("numbers", []):
         if _fmt(float(n)) not in answer_numbers:
             reasons.append(f"missing number {n}")
