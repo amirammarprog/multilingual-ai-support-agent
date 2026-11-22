@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brightcart Electronics (demo store)</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #0f172a; --muted: #64748b; --bg: #f8fafc; --card: #fff; --border: #e2e8f0; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #f1f5f9; --muted: #94a3b8; --bg: #020617; --card: #0f172a; --border: #1e293b; } }
+      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
+      header { background: var(--card); border-bottom: 1px solid var(--border); }
+      .wrap { max-width: 1040px; margin: 0 auto; padding: 16px; }
+      header .wrap { display: flex; align-items: center; justify-content: space-between; }
+      .brand { font-weight: 700; font-size: 18px; }
+      .note { font-size: 13px; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+      .card h3 { margin: 0 0 4px; font-size: 15px; }
+      .price { font-weight: 600; margin-top: 8px; }
+      code { background: var(--card); border: 1px solid var(--border); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <span class="brand">Brightcart Electronics</span>
+        <span class="note">Fictional shop · demo of the embeddable widget</span>
+      </div>
+    </header>
+    <main class="wrap">
+      <h1>Smartphones, ordinateurs et audio</h1>
+      <p class="note">
+        This page is a stand-in for a shop's own website. The only integration is one tag:
+        <code>&lt;script src="/widget.js" data-shop-id="demo-shop" defer&gt;&lt;/script&gt;</code>.
+        Open the chat button at the bottom of the page.
+      </p>
+      <div class="grid">
+        <div class="card"><h3>Orbix X5 128 Go</h3><div class="note">ORB-X5-128 · AMOLED 120 Hz, 5G</div><div class="price">1299.000 TND</div></div>
+        <div class="card"><h3>Calyra Book 14</h3><div class="note">CAL-BOOK-14 · 16 Go, SSD 512 Go</div><div class="price">2899.000 TND</div></div>
+        <div class="card"><h3>Casque Tessio ANC 700</h3><div class="note">TES-ANC-700 · réduction de bruit, 30 h</div><div class="price">389.000 TND</div></div>
+        <div class="card"><h3>Vantor Watch S</h3><div class="note">VAN-WATCH-S · GPS, 7 jours</div><div class="price">459.000 TND</div></div>
+      </div>
+    </main>
+    <script src="/widget.js" data-shop-id="demo-shop" defer></script>
+  </body>
+</html>
