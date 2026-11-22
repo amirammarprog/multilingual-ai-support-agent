@@ -59,7 +59,7 @@ async def seed_shop(session: AsyncSession, spec: dict) -> tuple[Shop, bool]:
     session.add(shop)
     await session.flush()
 
-    password = os.environ.get("SEED_STAFF_PASSWORD", DEFAULT_DEMO_PASSWORD)
+    password = os.environ.get("SEED_STAFF_PASSWORD") or DEFAULT_DEMO_PASSWORD
     for staff in (s for s in data.STAFF if s["shop"] == spec["slug"]):
         session.add(
             User(
