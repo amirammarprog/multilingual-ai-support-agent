@@ -1,0 +1,32 @@
+BRIGHTCART ELECTRONICS - QUICK SETUP AND TROUBLESHOOTING GUIDE
+(fictional products, demonstration content)
+
+TESSIO ANC 700 HEADPHONES - PAIRING
+Hold the power button for 5 seconds until the light blinks blue. Then select "Tessio ANC 700" in
+the Bluetooth settings of your phone. To connect a second device (multipoint), repeat the pairing
+on the second device while the first one stays connected. To reset the headphones, hold the power
+button and the ANC button together for 10 seconds.
+
+TESSIO BUDS 2 - PAIRING
+Open the case lid near your phone and press the case button for 3 seconds. If only one earbud
+plays, put both earbuds back in the case for 10 seconds, then take them out again.
+
+VANTOR WATCH S - RESET AND PAIRING
+Install the Vantor Fit app on your phone and pair the watch from the app, not from the Bluetooth
+settings. To restart the watch, hold the side button for 15 seconds. A factory reset is in
+Settings > System > Reset and erases all data on the watch.
+
+VANTOR 2K CAMERA - WI-FI
+The camera only works with 2.4 GHz Wi-Fi networks. It cannot connect to a 5 GHz-only network.
+Keep the camera within 10 metres of the router during setup.
+
+ORBIX X5 - DUAL SIM
+The SIM tray holds two nano-SIM cards. There is no memory card slot.
+
+CALYRA BOOK 14 AND 16 PRO - KEYBOARD LANGUAGE
+Press Alt + Shift to switch between French (AZERTY) and Arabic input. The first start takes
+about 10 minutes; keep the laptop plugged in.
+
+ZELKO PEN - CHARGING
+Attach the pen to the magnetic side of the Zelko Tab 10 to charge it. A full charge takes about
+30 minutes and lasts about 10 hours of writing.
