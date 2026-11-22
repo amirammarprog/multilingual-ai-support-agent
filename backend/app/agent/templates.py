@@ -86,11 +86,10 @@ T: dict[str, dict[str, str]] = {
         "ar-tn": "ما لقيتش الكوموند {order} في الحساب متاعك. ثبت في النومرو.",
     },
     "order_number_missing": {
-        "en": "Could you give me your order number? It looks like BC-10421 and is in your confirmation e-mail.",
-        "fr": "Pouvez-vous me donner votre numéro de commande ? Il ressemble à BC-10421 et figure dans l'e-mail "
-        "de confirmation.",
-        "ar": "هل يمكنك إعطائي رقم الطلب؟ يشبه BC-10421 وتجده في رسالة التأكيد.",
-        "ar-tn": "تنجم تعطيني نومرو الكوموند؟ يشبه لـ BC-10421 وتلقاه في الإيمايل متاع التأكيد.",
+        "en": "Could you give me your order number? You will find it in your confirmation e-mail (two letters, a dash and digits).",
+        "fr": "Pouvez-vous me donner votre numéro de commande ? Il figure dans l'e-mail de confirmation (deux lettres, un tiret et des chiffres).",
+        "ar": "هل يمكنك إعطائي رقم الطلب؟ تجده في رسالة التأكيد (حرفان ثم شرطة ثم أرقام).",
+        "ar-tn": "تنجم تعطيني نومرو الكوموند؟ تلقاه في الإيمايل متاع التأكيد (زوز حروف، شرطة وأرقام).",
     },
     "order_status": {
         "en": "Order {order} is {status_label}.",

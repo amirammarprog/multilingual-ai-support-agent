@@ -190,20 +190,51 @@ _LEAK = re.compile(
 )
 
 
+def _fmt(value: float) -> str:
+    return f"{value:.6f}".rstrip("0").rstrip(".") or "0"
+
+
+def number_readings(raw: str) -> set[str]:
+    """Every plausible value of a written number. Separators are ambiguous across the shop's languages:
+    "7,000 TND" is seven dinars in French, "1,299" is one thousand two hundred ninety-nine in English,
+    and TND prices are written with three decimals ("1299.000")."""
+    compact = re.sub(r"\s", "", raw)
+    readings: set[str] = set()
+    decimal = compact.replace(",", ".")
+    if decimal.count(".") <= 1:
+        readings.add(_fmt(float(decimal)))
+    if re.fullmatch(r"\d{1,3}([.,]\d{3})+", compact):
+        readings.add(_fmt(float(re.sub(r"[.,]", "", compact))))
+    return readings
+
+
+def _raw_numbers(text: str) -> list[str]:
+    return _NUMBER.findall(text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")))
+
+
 def _numbers(text: str, with_parts: bool = False) -> set[str]:
-    """Numeric tokens normalised so 1299.000, 1 299 and 1299 compare equal. ``with_parts`` also adds
-    every digit run (used for evidence, so "2026-11-24" supports "24 November 2026")."""
-    text = text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))
+    """All readings of all numbers in ``text``. ``with_parts`` also adds every digit run (used for
+    evidence, so "2026-11-24" supports "24 November 2026")."""
     out: set[str] = set()
-    for raw in _NUMBER.findall(text):
-        compact = re.sub(r"(?<=\d)[\s.,](?=\d{3})", "", raw).replace(",", ".")
-        try:
-            out.add(f"{float(compact):g}")
-        except ValueError:
-            continue
+    for raw in _raw_numbers(text):
+        out |= number_readings(raw)
     if with_parts:
-        out |= {str(int(part)) for part in re.findall(r"\d+", text)}
+        digits = text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))
+        out |= {str(int(part)) for part in re.findall(r"\d+", digits)}
     return out
+
+
+def unsupported_numbers(answer: str, evidence: str) -> list[str]:
+    """Numbers written in ``answer`` with no reading that appears in ``evidence``. Single digits are
+    ignored: they are mostly list markers or counts copied from the question."""
+    evidence_numbers = _numbers(evidence, with_parts=True)
+    missing = []
+    for raw in _raw_numbers(answer):
+        readings = number_readings(raw)
+        if readings & evidence_numbers or len(re.sub(r"\D", "", raw)) <= 1:
+            continue
+        missing.append(raw.strip())
+    return sorted(set(missing))
 
 
 @dataclass
@@ -229,13 +260,7 @@ def check_output(
     if _PROMISES.search(answer):
         problems.append("unauthorised_action_claim")
 
-    evidence_numbers = _numbers(evidence, with_parts=True)
-    unsupported = sorted(
-        n
-        for n in _numbers(answer) - evidence_numbers
-        # Single digits are mostly list markers or counts copied from the question.
-        if len(n.replace(".", "")) > 1
-    )
+    unsupported = unsupported_numbers(answer, evidence)
     if unsupported:
         problems.append("unsupported_numbers")
 

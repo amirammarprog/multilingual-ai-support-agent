@@ -13,7 +13,7 @@ SKU_RE = re.compile(r"\b[A-Z]{3,4}-[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,6})?\b")
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 _HUMAN = re.compile(
-    r"\b(human|real person|someone|agent|operator|representative|humain|conseiller|quelqu'un|une personne|"
+    r"\b(human|real person|agent|operator|representative|humain|conseiller|quelqu'un|une personne|"
     r"op[ée]rateur)\b|(إنسان|موظف|شخص حقيقي|حد من الفريق|واحد من الفريق|نحكي مع|نتكلم مع)|\b(7ad|wa7ed)\b",
     re.IGNORECASE,
 )
@@ -38,8 +38,13 @@ _SEARCH = re.compile(
     re.IGNORECASE,
 )
 _ORDER_WORDS = re.compile(
-    r"\b(order|commande|parcel|colis|tracking|suivi|delivery|livraison)\b|(طلب|طلبية|كوموند|"
-    r"الكوموند|الطرد|التوصيل)|\b(commanda)\b",
+    r"\b(order|commande|parcel|colis|tracking|suivi|delivery|livraison|arrive|arrives|arrivera|arriver)\b"
+    r"|(طلب|طلبية|كوموند|الكوموند|الطرد|التوصيل|يوصل|توصل)|\b(commanda)\b",
+    re.IGNORECASE,
+)
+_ORDER_STATUS_QUESTION = re.compile(
+    r"\b(where is|status of|track|tracking|où est|où en est|suivi de)\b.{0,20}\b(my|mon|ma|the|la|le)?\s*(order|commande|parcel|colis)\b"
+    r"|(وين|أين|اين)\s*(وصل|وصلت)?\s*(طلبي|الطلب|الكوموند|كوموندي)",
     re.IGNORECASE,
 )
 _GREETING = re.compile(
@@ -105,15 +110,18 @@ def heuristic_plan(message: str, memory: dict[str, Any]) -> Plan:
         return Plan(intent="human_handoff", tools=["escalate_to_human"], **{**fields, "ticket_summary": message[:200]})
     if _GREETING.match(message):
         return Plan(intent="greeting", tools=[], **fields)
-    if order or (_ORDER_WORDS.search(message) and memory.get("last_order_number") and not _TICKET.search(message)):
-        fields["order_number"] = order or memory.get("last_order_number")
-        return Plan(intent="order_status", tools=["get_order_status"], **fields)
+    # An explicit complaint or warranty claim opens a ticket, even when it names an order.
     if _TICKET.search(message):
         return Plan(
             intent="create_ticket",
             tools=["create_support_ticket"],
             **{**fields, "ticket_summary": message[:200], "knowledge_query": message},
         )
+    if order or (_ORDER_WORDS.search(message) and memory.get("last_order_number")):
+        fields["order_number"] = order or memory.get("last_order_number")
+        return Plan(intent="order_status", tools=["get_order_status"], **fields)
+    if _ORDER_STATUS_QUESTION.search(message):
+        return Plan(intent="order_status", tools=["get_order_status"], **fields)  # asks for the number
     if _STOCK.search(message):
         return Plan(
             intent="stock",
@@ -126,6 +134,9 @@ def heuristic_plan(message: str, memory: dict[str, Any]) -> Plan:
             tools=["get_product_details"],
             **{**fields, "product_query": None if sku else message, "knowledge_query": message},
         )
+    if sku:
+        # A SKU on its own means a question about that product.
+        return Plan(intent="product_info", tools=["get_product_details"], **{**fields, "knowledge_query": message})
     if _SEARCH.search(message):
         return Plan(intent="product_search", tools=["search_products"], **{**fields, "product_query": message})
     return Plan(intent="policy", tools=[], **{**fields, "knowledge_query": message})

@@ -292,7 +292,8 @@ async def execute(state: AgentState, runtime: Runtime[AgentDeps]) -> dict[str, A
         results.append(_record(search))
         if search.ok and search.data and search.data["results"]:
             resolved_sku = search.data["results"][0]["sku"]
-        return resolved_sku
+        # "And how much is it?": nothing matches the words, so it is about the product just discussed.
+        return resolved_sku or memory.get("last_sku")
 
     for name in plan["tools"]:
         if name == "search_products":
@@ -502,6 +503,16 @@ async def respond(state: AgentState, runtime: Runtime[AgentDeps]) -> dict[str, A
     deps = runtime.context
     lang, dialect = state["language"], state.get("dialect")
     info = _info_reply(state, deps)
+    retrieval_state = state.get("retrieval") or {}
+    kb_answerable = bool(retrieval_state.get("chunks")) and retrieval_state.get("confidence", 0) >= retrieval_state.get(
+        "threshold", 1
+    )
+    only_product_unclear = all(
+        r.get("error") in (None, "product_not_identified") for r in state.get("tool_results", []) if not r["ok"]
+    )
+    # "Which product do you mean?" is only useful when nothing else answers the question.
+    if info and kb_answerable and only_product_unclear:
+        info = None
     if info:
         return {
             "answer": info[0],

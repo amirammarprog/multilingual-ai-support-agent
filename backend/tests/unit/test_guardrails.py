@@ -98,3 +98,26 @@ def test_output_check_removes_foreign_contact_data():
     assert "karim.haddad" not in result.redacted_answer
     allowed = check_output("Write to support@shop.example.com", "", {"support@shop.example.com"}, "ref")
     assert allowed.ok
+
+
+@pytest.mark.parametrize(
+    ("answer", "evidence"),
+    [
+        ("Le prix est de 1 299 TND.", '"price": "1299.000"'),
+        ("It costs 1,299 dinars.", '"price": "1299.000"'),
+        ("Livraison standard : 7,000 TND.", "Standard delivery costs 7.000 TND."),
+        ("سعره 2899.000 دينار", '"price": "2899.000"'),
+        ("السعر ٣٨٩ دينار", '"price": "389.000"'),
+        ("Delivered on 24 November 2026.", '"delivered_on": "2026-11-24"'),
+    ],
+)
+def test_numbers_are_matched_across_writing_conventions(answer, evidence):
+    assert check_output(answer, evidence, set(), "ref").unsupported_numbers == []
+
+
+def test_separator_readings():
+    from app.security.guardrails import number_readings
+
+    assert number_readings("7,000") == {"7", "7000"}
+    assert number_readings("1299.000") == {"1299"}
+    assert number_readings("1 299") == {"1299"}

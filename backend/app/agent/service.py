@@ -282,5 +282,7 @@ async def handle_turn(
             "retrieval": retrieval,
             "plan_source": state.get("plan_source"),
             "usages": usages,
+            "evidence": state.get("evidence", ""),
+            "tool_results": state.get("tool_results", []),
         },
     )
