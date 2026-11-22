@@ -1,8 +1,10 @@
 name: Evaluation
 
 # Runs when code that changes answers changes. The offline mode needs no secrets (rule-based planner,
-# real retrieval, tools and guardrails). The full mode (LLM agent + LLM judge) runs only when the
-# repository has an LLM_PRIMARY_API_KEY secret, or on demand.
+# real retrieval, tools and guardrails). The full mode (LLM agent + LLM judge) runs on demand only
+# (Actions -> Evaluation -> Run workflow -> mode: full), so free-tier quotas are not spent on every
+# push. It needs the LLM_PRIMARY_API_KEY repository secret and, for a non-OpenAI provider, the
+# LLM_PRIMARY_BASE_URL / LLM_PRIMARY_FAST_MODEL / LLM_PRIMARY_SMART_MODEL repository variables.
 on:
   push:
     branches: [main]
@@ -55,6 +57,10 @@ jobs:
       LLM_PRIMARY_BASE_URL: ${{ vars.LLM_PRIMARY_BASE_URL || 'https://api.openai.com/v1' }}
       LLM_PRIMARY_FAST_MODEL: ${{ vars.LLM_PRIMARY_FAST_MODEL || 'gpt-4.1-nano' }}
       LLM_PRIMARY_SMART_MODEL: ${{ vars.LLM_PRIMARY_SMART_MODEL || 'gpt-4.1-mini' }}
+      LLM_PRIMARY_REQUESTS_PER_MINUTE: ${{ vars.LLM_PRIMARY_REQUESTS_PER_MINUTE || '0' }}
+      LLM_REASONING_EFFORT: ${{ vars.LLM_REASONING_EFFORT }}
+      LLM_MAX_RETRY_WAIT_SECONDS: ${{ vars.LLM_MAX_RETRY_WAIT_SECONDS || '90' }}
+      JUDGE_MODEL: ${{ vars.JUDGE_MODEL }}
     defaults:
       run:
         working-directory: backend
@@ -79,7 +85,8 @@ jobs:
         # that makes the deterministic pipeline worse fails the build.
         run: uv run python -m evals.run --mode offline --min-pass-rate 0.65 --max-hallucination-rate 0.02
       - name: Full evaluation (LLM agent + judge)
-        if: env.LLM_PRIMARY_API_KEY != '' && (github.event_name != 'workflow_dispatch' || inputs.mode == 'full')
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'full' && env.LLM_PRIMARY_API_KEY != ''
+        # Exit code 3 = incomplete (quota or provider errors): rerun locally with --resume, see the README.
         run: uv run python -m evals.run --mode full
       - name: Upload reports
         if: always()

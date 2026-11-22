@@ -166,6 +166,7 @@ Trabelsi, who owns orders BC-10421 and BC-10422).
 | Mode | Configuration | Cost |
 | --- | --- | --- |
 | **No LLM** (degraded mode) | nothing | free |
+| **Free API key** (Groq, Google Gemini, OpenRouter) | see [Using a free API key](#using-a-free-api-key) | free, with rate limits |
 | **Local LLM** | `docker compose --profile local-llm up -d` (llama.cpp + Qwen3-1.7B, 1.3 GB download), then `LLM_PRIMARY_BASE_URL=http://llm:8080/v1`, `LLM_PRIMARY_FAST_MODEL=qwen3-1.7b`, `LLM_PRIMARY_SMART_MODEL=qwen3-1.7b`, `LLM_DISABLE_THINKING=true` | free, needs a decent CPU/GPU |
 | **OpenAI** (or any OpenAI-compatible API) | `LLM_PRIMARY_API_KEY=...` | paid, see below |
 
@@ -180,6 +181,54 @@ tokens; check current prices before use. A turn uses two model calls of roughly 
 each, which is roughly USD 0.0003 (nano) to 0.0015 (mini) per message. A full evaluation run (130 cases,
 agent + judge) is in the order of USD 0.30 to 1.00. `EMBEDDING_PROVIDER=openai`, `STT_PROVIDER=openai` and
 `TTS_PROVIDER=openai` are also paid and optional; the defaults are local and free.
+
+### Using a free API key
+
+Any OpenAI-compatible provider works. Three have a free tier; you create the account and the key yourself,
+put it in `.env` (git-ignored), and never commit it. Free-tier limits change, so check them in each
+provider's console.
+
+| Provider | Get a key | `LLM_PRIMARY_BASE_URL` | Notes |
+| --- | --- | --- | --- |
+| Groq | [console.groq.com/keys](https://console.groq.com/keys) | `https://api.groq.com/openai/v1` | fast; limits per model; strict JSON schema only on some models (handled automatically) |
+| Google Gemini | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | `https://generativelanguage.googleapis.com/v1beta/openai/` | low requests per minute and per day; free-tier prompts may be used by Google (the demo data is fictional) |
+| OpenRouter | [openrouter.ai/keys](https://openrouter.ai/keys) | `https://openrouter.ai/api/v1` | free models end with `:free`; about 50 requests/day until $10 of credits are bought, so a full evaluation spans several days |
+
+1. Copy the preset for your provider from [`.env.example`](.env.example) into `.env`, with your key in
+   `LLM_PRIMARY_API_KEY` and a pace below the provider's limit in `LLM_PRIMARY_REQUESTS_PER_MINUTE`.
+2. Check the key and pick model ids (the command lists the models your key can use and sends one small
+   request to the fast, smart and judge models):
+
+   ```bash
+   docker compose --profile dev run --rm dev python -m app.cli llm-check
+   ```
+
+3. Restart the API (`docker compose up -d api`) to use the model in the chat, or run the evaluation:
+
+   ```bash
+   docker compose --profile dev run --rm dev python -m evals.run --mode full
+   # stopped by a quota? continue later, without redoing finished cases:
+   docker compose --profile dev run --rm dev python -m evals.run --mode full --resume latest
+   # daily cap (e.g. OpenRouter): do a fixed number of cases per day
+   docker compose --profile dev run --rm dev python -m evals.run --mode full --resume latest --max-new-cases 12
+   ```
+
+How free tiers are handled: requests are paced per provider; 429, 5xx and network errors are retried with
+exponential backoff that honours `Retry-After`; a wait longer than `LLM_MAX_RETRY_WAIT_SECONDS` (a daily
+quota) fails fast. In the evaluation, a case where a model call failed is not scored on the no-LLM fallback:
+it stays pending and the run is marked incomplete until `--resume` finishes it. Expect roughly 3–4 model
+calls per case (planner, responder, sometimes a second responder attempt, judge), so about 400–500 requests
+for the 130 cases.
+
+**Judge model.** By default the judge is the provider's smart model; `JUDGE_MODEL` (and optionally
+`JUDGE_BASE_URL`, `JUDGE_API_KEY`) points it elsewhere. A small free model can be a weak judge: the report
+shows how often its verdict agrees with the deterministic checks and prints a warning below 70%.
+
+**GitHub Actions.** In the repository settings (Settings → Secrets and variables → Actions), create the
+secret `LLM_PRIMARY_API_KEY`, and the variables `LLM_PRIMARY_BASE_URL`, `LLM_PRIMARY_FAST_MODEL`,
+`LLM_PRIMARY_SMART_MODEL`, `LLM_PRIMARY_REQUESTS_PER_MINUTE` and, optionally, `JUDGE_MODEL` and
+`LLM_REASONING_EFFORT`. Then run the **Evaluation** workflow by hand with mode `full`. It never runs on
+push, so free quotas are not spent on every commit.
 
 ### Observability (Langfuse)
 
@@ -206,7 +255,7 @@ Everything runs in containers, so no local Python or Node install is needed.
 
 ```bash
 docker compose up -d db
-docker compose --profile dev run --rm dev pytest              # 181 tests: unit, integration, security
+docker compose --profile dev run --rm dev pytest              # 196 tests: unit, integration, security
 docker compose --profile dev run --rm dev ruff check .
 docker compose --profile dev run --rm dev python scripts/chat_cli.py "Où est ma commande BC-10421 ?" --customer BC-C-1001 --debug
 cd frontend && npm ci && npm run dev                           # http://localhost:5173, proxies /api to :8000
@@ -309,14 +358,17 @@ docker compose --profile dev run --rm dev python -m evals.run --mode full      #
 Runs are stored in the database (evaluation dashboard) and written to
 [`backend/evals/reports`](backend/evals/reports) with per-metric, per-language and per-category scores,
 failed cases and the change since the previous run. The **Evaluation** workflow runs the offline mode on
-every change to the agent, the knowledge base or the dataset, fails below a pass rate of 0.65 or above a
-hallucination rate of 0.02, and adds the full mode when an `LLM_PRIMARY_API_KEY` secret is configured.
+every change to the agent, the knowledge base or the dataset, and fails below a pass rate of 0.65 or above
+a hallucination rate of 0.02. The full mode runs when started by hand with an `LLM_PRIMARY_API_KEY` secret
+(see [Using a free API key](#using-a-free-api-key)). Full runs save every case as it finishes and can be
+resumed; the judge's agreement with the deterministic checks is reported so a weak judge is visible.
 
 ### Results (real run, offline mode)
 
-Only measured numbers are reported. The **full mode (LLM agent + LLM judge) has not been run yet**: the
-development machine had no API key, and the free local model was too slow on its CPU (about 0.4 tokens/s)
-to run 130 cases. The scores below are for the offline mode, with no LLM at all.
+Only measured numbers are reported. The **full mode (LLM agent + LLM judge) has not been run yet**: no API
+key was configured during development, and the free local model was too slow on the development CPU
+(about 0.4 tokens/s) to run 130 cases. Its results will be added here from a real run with a free-tier
+key. The scores below are for the offline mode, with no LLM at all.
 
 Run of 22 November 2026, [report](backend/evals/reports/offline-latest.md): **94/130 cases passed (72.3%)**.
 
