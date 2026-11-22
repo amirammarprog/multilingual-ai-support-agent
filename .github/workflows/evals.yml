@@ -1,0 +1,89 @@
+name: Evaluation
+
+# Runs when code that changes answers changes. The offline mode needs no secrets (rule-based planner,
+# real retrieval, tools and guardrails). The full mode (LLM agent + LLM judge) runs only when the
+# repository has an LLM_PRIMARY_API_KEY secret, or on demand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/app/**"
+      - "backend/evals/**"
+      - "backend/knowledge/**"
+      - "backend/uv.lock"
+  pull_request:
+    paths:
+      - "backend/app/**"
+      - "backend/evals/**"
+      - "backend/knowledge/**"
+      - "backend/uv.lock"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: offline (no LLM) or full (LLM agent + judge, needs secrets)
+        type: choice
+        options: [offline, full]
+        default: offline
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: support
+          POSTGRES_PASSWORD: support
+          POSTGRES_DB: support
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U support"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      APP_ENV: development
+      JWT_SECRET: ci-only-secret-used-for-evals-only-000000000
+      DATABASE_URL: postgresql+psycopg://support_app:support_app@localhost:5432/support_eval
+      MIGRATION_DATABASE_URL: postgresql+psycopg://support:support@localhost:5432/support_eval
+      MODEL_CACHE_DIR: ${{ github.workspace }}/.models
+      HF_HOME: ${{ github.workspace }}/.models/hf
+      LOG_LEVEL: WARNING
+      EVAL_TRIGGER: ci
+      LLM_PRIMARY_API_KEY: ${{ secrets.LLM_PRIMARY_API_KEY }}
+      LLM_PRIMARY_BASE_URL: ${{ vars.LLM_PRIMARY_BASE_URL || 'https://api.openai.com/v1' }}
+      LLM_PRIMARY_FAST_MODEL: ${{ vars.LLM_PRIMARY_FAST_MODEL || 'gpt-4.1-nano' }}
+      LLM_PRIMARY_SMART_MODEL: ${{ vars.LLM_PRIMARY_SMART_MODEL || 'gpt-4.1-mini' }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --frozen
+      - uses: actions/cache@v4
+        with:
+          path: .models
+          key: models-${{ hashFiles('backend/app/config.py') }}
+      - name: Database and fictional demo data
+        run: |
+          uv run python -m app.cli bootstrap-db
+          uv run alembic upgrade head
+          uv run python -m app.cli seed
+      - name: Offline evaluation (quality gate)
+        # Gates are set just below the recorded baseline (evals/reports/offline-latest.md), so a change
+        # that makes the deterministic pipeline worse fails the build.
+        run: uv run python -m evals.run --mode offline --min-pass-rate 0.65 --max-hallucination-rate 0.02
+      - name: Full evaluation (LLM agent + judge)
+        if: env.LLM_PRIMARY_API_KEY != '' && (github.event_name != 'workflow_dispatch' || inputs.mode == 'full')
+        run: uv run python -m evals.run --mode full
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-reports
+          path: backend/evals/reports/

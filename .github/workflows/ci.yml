@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: support
+          POSTGRES_PASSWORD: support
+          POSTGRES_DB: support
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U support"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      APP_ENV: test
+      JWT_SECRET: ci-only-secret-used-for-tests-only-0000000000
+      DATABASE_URL: postgresql+psycopg://support_app:support_app@localhost:5432/support_test
+      MIGRATION_DATABASE_URL: postgresql+psycopg://support:support@localhost:5432/support_test
+      MODEL_CACHE_DIR: ${{ github.workspace }}/.models
+      HF_HOME: ${{ github.workspace }}/.models/hf
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Cache local models (embeddings, reranker)
+        uses: actions/cache@v4
+        with:
+          path: .models
+          key: models-${{ hashFiles('backend/app/config.py') }}
+      - name: Lint and format
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Migrations round trip (upgrade, downgrade, upgrade, drift check)
+        env:
+          DATABASE_URL: postgresql+psycopg://support_app:support_app@localhost:5432/support_migrations
+          MIGRATION_DATABASE_URL: postgresql+psycopg://support:support@localhost:5432/support_migrations
+        run: |
+          uv run python -m app.cli bootstrap-db
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+          uv run alembic check
+      - name: Tests (unit, integration, security)
+        run: uv run pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build images
+        env:
+          JWT_SECRET: build-only
+        run: docker compose build migrate web
