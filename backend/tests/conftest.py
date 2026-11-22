@@ -37,11 +37,16 @@ DEMO_PASSWORD = "demo-password-2026"
 def _reset_database() -> None:
     from alembic import command
     from alembic.config import Config
+    from sqlalchemy.engine import make_url
 
     from app.cli import bootstrap_db
 
-    bootstrap_db()
     settings = get_settings()
+    # The suite drops the whole schema: never let it touch a database that is not a test database.
+    for url in (settings.database_url, settings.migration_database_url):
+        if not (make_url(url).database or "").endswith("_test"):
+            pytest.exit(f"refusing to run: database '{make_url(url).database}' does not end with '_test'", 2)
+    bootstrap_db()
     engine = create_engine(settings.migration_database_url, isolation_level="AUTOCOMMIT")
     role = settings.database_url.split("://", 1)[1].split(":", 1)[0]
     with engine.connect() as conn:

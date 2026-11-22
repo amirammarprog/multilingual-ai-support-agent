@@ -272,12 +272,14 @@ async def conversation_detail(conversation_id: uuid.UUID, staff: Staff, session:
     conversation = await _conversation(session, staff.shop.id, conversation_id)
     messages = (
         await session.scalars(
-            select(Message).where(Message.conversation_id == conversation.id).order_by(Message.created_at)
+            select(Message).where(Message.conversation_id == conversation.id).order_by(Message.created_at, Message.id)
         )
     ).all()
     tools = (
         await session.scalars(
-            select(ToolCall).where(ToolCall.conversation_id == conversation.id).order_by(ToolCall.created_at)
+            select(ToolCall)
+            .where(ToolCall.conversation_id == conversation.id)
+            .order_by(ToolCall.created_at, ToolCall.id)
         )
     ).all()
     tickets = (

@@ -72,7 +72,7 @@ async def _history(session: AsyncSession, conversation: Conversation, turns: int
         await session.scalars(
             select(Message)
             .where(Message.conversation_id == conversation.id, Message.shop_id == conversation.shop_id)
-            .order_by(Message.created_at.desc())
+            .order_by(Message.created_at.desc(), Message.id.desc())
             .limit(turns * 2)
         )
     ).all()

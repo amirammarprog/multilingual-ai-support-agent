@@ -7,6 +7,7 @@ inserted comes from a tool result or the shop record.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 T: dict[str, dict[str, str]] = {
@@ -265,7 +266,19 @@ def lang_key(language: str, dialect: str | None) -> str:
     return "ar-tn" if language == "ar" and dialect == "tn" else (language if language in ("en", "fr", "ar") else "en")
 
 
+_LATIN_OR_DIGIT = re.compile(r"[A-Za-z0-9]")
+FSI, PDI = "⁨", "⁩"  # Unicode "first strong isolate" / "pop directional isolate"
+
+
 def render(key: str, language: str, dialect: str | None = None, **values: Any) -> str:
     variants = T[key]
-    template = variants.get(lang_key(language, dialect)) or variants["en"]
+    chosen = lang_key(language, dialect)
+    template = variants.get(chosen) or variants["en"]
+    if chosen in ("ar", "ar-tn"):
+        # Isolate inserted values (SKUs, prices, tracking numbers) so the bidi algorithm does not move
+        # Latin text and digits around inside right-to-left sentences.
+        values = {
+            k: f"{FSI}{v}{PDI}" if isinstance(v, str | int) and _LATIN_OR_DIGIT.search(str(v)) else v
+            for k, v in values.items()
+        }
     return template.format(**values)

@@ -132,7 +132,7 @@ async def list_messages(widget: Widget, session: Session) -> list[MessageOut]:
         await session.scalars(
             select(Message)
             .where(Message.conversation_id == widget.claims.conversation_id, Message.shop_id == widget.shop.id)
-            .order_by(Message.created_at)
+            .order_by(Message.created_at, Message.id)
         )
     ).all()
     return [
