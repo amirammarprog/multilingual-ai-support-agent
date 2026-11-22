@@ -1,6 +1,9 @@
 """A full-mode evaluation interrupted by provider failures is resumable and never scores a case that was
 answered by the no-LLM fallback."""
 
+import json
+import uuid
+
 import pytest
 from sqlalchemy import select
 
@@ -94,3 +97,22 @@ async def test_max_new_cases_paces_a_daily_quota():
         assert count == 1 and run.status == "incomplete"
     finally:
         set_llm(None)
+
+
+async def test_rewriting_a_finished_report_keeps_its_commit_and_one_history_line(tmp_path, monkeypatch):
+    monkeypatch.setattr(eval_run, "REPORTS", tmp_path)
+    monkeypatch.setattr(eval_run, "git_sha", lambda: "commit-of-run")
+    assert await eval_run.main(["--mode", "offline", "--ids", *IDS, "--trigger", "test-rewrite"]) == 0
+    first = json.loads((tmp_path / "offline-latest.json").read_text(encoding="utf-8"))
+
+    monkeypatch.setattr(eval_run, "git_sha", lambda: "later-commit")
+    assert await eval_run.main(["--mode", "offline", "--ids", *IDS, "--resume", first["id"]]) == 0
+    second = json.loads((tmp_path / "offline-latest.json").read_text(encoding="utf-8"))
+    history = [json.loads(line) for line in (tmp_path / "history.jsonl").read_text(encoding="utf-8").splitlines()]
+
+    assert second["id"] == first["id"] and second["git_sha"] == "commit-of-run"
+    assert [h["id"] for h in history] == [first["id"]]
+    # Its own latest report is not taken as "the previous run" (a mode with no other runs in the database).
+    (tmp_path / "solo-latest.json").write_text(json.dumps(second), encoding="utf-8")
+    assert await eval_run.previous_overall("solo", uuid.UUID(first["id"])) is None
+    assert await eval_run.previous_overall("solo", uuid.uuid4()) == second["metrics"]["overall"]

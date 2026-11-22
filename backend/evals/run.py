@@ -93,18 +93,20 @@ async def run_case(shop: Shop, case: dict[str, Any], use_llm: bool) -> tuple[Any
         return reply, int((time.perf_counter() - started) * 1000)
 
 
-async def previous_overall(mode: str) -> dict[str, Any] | None:
+async def previous_overall(mode: str, current: uuid.UUID) -> dict[str, Any] | None:
     async with tenant_session(None) as session:
         run = await session.scalar(
             select(EvaluationRun)
-            .where(EvaluationRun.mode == mode, EvaluationRun.status == "completed")
+            .where(EvaluationRun.mode == mode, EvaluationRun.status == "completed", EvaluationRun.id != current)
             .order_by(EvaluationRun.started_at.desc())
         )
         if run is not None:
             return run.metrics.get("overall")
     latest = REPORTS / f"{mode}-latest.json"
     if latest.exists():
-        return json.loads(latest.read_text(encoding="utf-8"))["metrics"]["overall"]
+        data = json.loads(latest.read_text(encoding="utf-8"))
+        if data.get("id") != str(current):
+            return data["metrics"]["overall"]
     return None
 
 
@@ -118,10 +120,13 @@ def write_outputs(
         (REPORTS / f"{mode}-latest.json").write_text(
             json.dumps({**summary, "results": results}, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
         )
-        keys = ("mode", "trigger", "started_at", "git_sha", "dataset_version", "total_cases", "passed_cases")
+        keys = ("id", "mode", "trigger", "started_at", "git_sha", "dataset_version", "total_cases", "passed_cases")
         entry = {k: summary[k] for k in keys} | {"overall": summary["metrics"]["overall"]}
-        with (REPORTS / "history.jsonl").open("a", encoding="utf-8") as history:
-            history.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        # One line per run: rewriting a run's report (--resume on a finished run) replaces its line.
+        history = REPORTS / "history.jsonl"
+        lines = history.read_text(encoding="utf-8").splitlines() if history.exists() else []
+        lines = [line for line in lines if line.strip() and json.loads(line).get("id") != entry["id"]]
+        history.write_text("\n".join([*lines, json.dumps(entry, ensure_ascii=False)]) + "\n", encoding="utf-8")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as fh:
             fh.write(markdown)
@@ -232,7 +237,7 @@ async def main(argv: list[str] | None = None) -> int:
         if run.dataset_version != dataset_version():
             print("the dataset changed since that run started; start a new run", file=sys.stderr)
             return 2
-        run_id, started_at = run.id, run.started_at
+        run_id, started_at, run_sha = run.id, run.started_at, run.git_sha
         async with tenant_session(None) as session:
             done = set(
                 (await session.scalars(select(EvaluationResult.case_id).where(EvaluationResult.run_id == run_id))).all()
@@ -243,12 +248,12 @@ async def main(argv: list[str] | None = None) -> int:
             await session.commit()
         print(f"resuming run {run_id}: {len(done)} cases already done")
     else:
-        started_at = datetime.now(UTC)
+        started_at, run_sha = datetime.now(UTC), git_sha()
         async with tenant_session(None) as session:
             run = EvaluationRun(
                 mode=args.mode,
                 trigger=args.trigger,
-                git_sha=git_sha(),
+                git_sha=run_sha,
                 dataset_version=dataset_version(),
                 config=config,
                 total_cases=len(cases),
@@ -330,7 +335,7 @@ async def main(argv: list[str] | None = None) -> int:
     complete = not incomplete and len(results) == len(cases)
     metrics = aggregate(results) if results else {"overall": {}}
     comparison = None
-    previous = await previous_overall(args.mode) if complete else None
+    previous = await previous_overall(args.mode, run_id) if complete else None
     if previous and results:
         comparison = {
             k: {
@@ -348,7 +353,7 @@ async def main(argv: list[str] | None = None) -> int:
         stored = await session.get(EvaluationRun, run_id)
         assert stored is not None
         stored.status = "completed" if complete else "incomplete"
-        stored.finished_at = datetime.now(UTC) if complete else None
+        stored.finished_at = (stored.finished_at or datetime.now(UTC)) if complete else None
         stored.passed_cases, stored.metrics, stored.total_cases = passed, metrics, len(cases)
         await session.commit()
 
@@ -366,7 +371,7 @@ async def main(argv: list[str] | None = None) -> int:
         "mode": args.mode,
         "trigger": args.trigger,
         "started_at": started_at.isoformat(),
-        "git_sha": git_sha(),
+        "git_sha": run_sha,  # the commit the run started on, also when its report is rewritten later
         "dataset_version": dataset_version(),
         "config": config,
         "total_cases": len(cases),

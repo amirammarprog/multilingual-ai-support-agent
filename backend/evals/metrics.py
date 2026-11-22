@@ -234,7 +234,7 @@ def evaluate_case(case: dict[str, Any], reply: Any, judge: dict[str, Any] | None
 
 def _mean(values: list[float | None]) -> float | None:
     present = [v for v in values if v is not None]
-    return round(statistics.fmean(present), 4) if present else None
+    return round(statistics.fmean(present), 6) if present else None
 
 
 def aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
