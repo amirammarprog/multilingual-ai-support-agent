@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
 
+import numpy as np
+
 from app.config import Settings, get_settings
 from app.errors import AppError, PayloadTooLarge, ServiceUnavailable, UnsupportedMedia
 
@@ -57,6 +59,34 @@ def validate_audio(data: bytes, content_type: str) -> str:
     return base
 
 
+SAMPLE_RATE = 16_000
+
+
+def decode_audio(audio: bytes) -> np.ndarray:
+    """Any browser recording (webm/opus, ogg, wav, mp3, m4a) -> 16 kHz mono float32 samples.
+
+    Decoding here, with PyAV directly, keeps the provider independent of the audio helpers bundled with
+    faster-whisper (whose PyAV call broke with PyAV 19)."""
+    import av
+
+    chunks: list[np.ndarray] = []
+    try:
+        with av.open(io.BytesIO(audio), mode="r") as container:
+            if not container.streams.audio:
+                raise AppError("The recording contains no audio.")
+            resampler = av.AudioResampler(format="s16", layout="mono", rate=SAMPLE_RATE)
+            for frame in container.decode(container.streams.audio[0]):
+                chunks.extend(f.to_ndarray() for f in resampler.resample(frame))
+            chunks.extend(f.to_ndarray() for f in resampler.resample(None))
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError("The recording could not be decoded.") from exc
+    if not chunks:
+        raise AppError("The recording is empty.")
+    return np.concatenate(chunks, axis=1).reshape(-1).astype(np.float32) / 32768.0
+
+
 class STTProvider(Protocol):
     name: str
 
@@ -94,11 +124,12 @@ class LocalWhisperSTT:
         return self._model
 
     def _run(self, audio: bytes, language_hint: str | None) -> Transcript:
+        samples = decode_audio(audio)
+        if len(samples) > self._settings.max_audio_seconds * SAMPLE_RATE:
+            raise PayloadTooLarge(f"Recordings are limited to {self._settings.max_audio_seconds} seconds.")
         model = self._load()
         hint = language_hint.split("-")[0] if language_hint in ("en", "fr", "ar", "ar-tn") else None
-        segments, info = model.transcribe(io.BytesIO(audio), language=hint, beam_size=1, vad_filter=True)
-        if info.duration > self._settings.max_audio_seconds:
-            raise PayloadTooLarge(f"Recordings are limited to {self._settings.max_audio_seconds} seconds.")
+        segments, info = model.transcribe(samples, language=hint, beam_size=1, vad_filter=True)
         text = " ".join(s.text.strip() for s in segments).strip()
         return Transcript(text, info.language, round(info.duration, 2), self.name)
 

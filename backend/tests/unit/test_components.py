@@ -167,3 +167,34 @@ def test_dates_are_localised():
     assert templates.format_date("2026-11-24", "en") == "24 November 2026"
     assert templates.format_date("2026-11-24", "fr") == "24 novembre 2026"
     assert templates.format_date("2026-11-24", "ar") == "24 نوفمبر 2026"
+
+
+def test_audio_is_decoded_to_16khz_mono():
+    """Regression: faster-whisper's bundled decoder broke with PyAV 19; ours must keep working."""
+    import math
+    import struct
+    import wave
+
+    from app.voice.providers import SAMPLE_RATE, decode_audio
+
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(2)
+        wav.setsampwidth(2)
+        wav.setframerate(44_100)
+        frames = b"".join(
+            struct.pack("<hh", v, v)
+            for v in (int(8000 * math.sin(2 * math.pi * 440 * i / 44_100)) for i in range(44_100))
+        )
+        wav.writeframes(frames)
+    samples = decode_audio(buffer.getvalue())
+    assert abs(len(samples) - SAMPLE_RATE) < 400  # one second at 16 kHz
+    assert samples.dtype.name == "float32" and 0.1 < float(abs(samples).max()) < 1.0
+
+
+def test_undecodable_audio_is_rejected():
+    from app.errors import AppError
+    from app.voice.providers import decode_audio
+
+    with pytest.raises(AppError):
+        decode_audio(b"definitely not audio" * 100)
