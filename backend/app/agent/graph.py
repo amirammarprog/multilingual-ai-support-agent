@@ -545,7 +545,11 @@ async def respond(state: AgentState, runtime: Runtime[AgentDeps]) -> dict[str, A
         }
 
     if not (deps.use_llm and deps.llm.available) or state.get("degraded"):
-        text = template_answer(state, deps)
+        # An empty product search says nothing; a relevant document section is the better answer.
+        only_empty_search = all(
+            r["tool"] == "search_products" and not (r.get("data") or {}).get("results") for r in results if r["ok"]
+        )
+        text = None if (kb_ok and only_empty_search) else template_answer(state, deps)
         if text:
             return {
                 "answer": text,
