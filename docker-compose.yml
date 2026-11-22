@@ -1,0 +1,129 @@
+name: support-agent
+
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-development}
+  DEMO_MODE: ${DEMO_MODE:-true}
+  LOG_JSON: ${LOG_JSON:-true}
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+  DATABASE_URL: postgresql+psycopg://support_app:${APP_DB_PASSWORD:-support_app}@db:5432/support
+  MIGRATION_DATABASE_URL: postgresql+psycopg://support:${POSTGRES_PASSWORD:-support}@db:5432/support
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+  LLM_PRIMARY_BASE_URL: ${LLM_PRIMARY_BASE_URL:-https://api.openai.com/v1}
+  LLM_PRIMARY_API_KEY: ${LLM_PRIMARY_API_KEY:-}
+  LLM_PRIMARY_FAST_MODEL: ${LLM_PRIMARY_FAST_MODEL:-gpt-4.1-nano}
+  LLM_PRIMARY_SMART_MODEL: ${LLM_PRIMARY_SMART_MODEL:-gpt-4.1-mini}
+  LLM_FALLBACK_BASE_URL: ${LLM_FALLBACK_BASE_URL:-}
+  LLM_FALLBACK_API_KEY: ${LLM_FALLBACK_API_KEY:-}
+  LLM_FALLBACK_FAST_MODEL: ${LLM_FALLBACK_FAST_MODEL:-}
+  LLM_FALLBACK_SMART_MODEL: ${LLM_FALLBACK_SMART_MODEL:-}
+  LLM_DISABLE_THINKING: ${LLM_DISABLE_THINKING:-false}
+  LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-120}
+  ROUTER_MODE: ${ROUTER_MODE:-auto}
+  EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-local}
+  RERANKER_PROVIDER: ${RERANKER_PROVIDER:-cross_encoder}
+  STT_PROVIDER: ${STT_PROVIDER:-local_whisper}
+  TTS_PROVIDER: ${TTS_PROVIDER:-browser}
+  VOICE_API_KEY: ${VOICE_API_KEY:-}
+  LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+  LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+  LANGFUSE_HOST: ${LANGFUSE_HOST:-http://langfuse-web:3000}
+  MODEL_CACHE_DIR: /models
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: support
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-support}
+      POSTGRES_DB: support
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U support -d support"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Not published on the host: only the API container talks to the database.
+
+  migrate:
+    build: { context: ./backend, target: runtime }
+    image: support-agent-backend:latest
+    environment: *backend-env
+    command: ["sh", "-c", "python -m app.cli bootstrap-db && alembic upgrade head && python -m app.cli seed"]
+    volumes:
+      - models:/models
+    depends_on:
+      db: { condition: service_healthy }
+
+  api:
+    image: support-agent-backend:latest
+    environment: *backend-env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - models:/models
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api: { condition: service_started }
+    restart: unless-stopped
+
+  # Optional local LLM (no API key needed): an OpenAI-compatible llama.cpp server.
+  # Start with:  docker compose --profile local-llm up -d
+  # Then set LLM_PRIMARY_BASE_URL=http://llm:8081/v1 in .env (see README).
+  llm:
+    profiles: ["local-llm"]
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command:
+      - "-hf"
+      - "${LOCAL_LLM_HF_REPO:-ggml-org/Qwen3-1.7B-GGUF:Q4_K_M}"
+      - "--alias"
+      - "${LOCAL_LLM_ALIAS:-qwen3-1.7b}"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8081"
+      - "--ctx-size"
+      - "${LOCAL_LLM_CTX:-8192}"
+      - "--parallel"
+      - "1"
+      - "--jinja"
+    environment:
+      LLAMA_CACHE: /models/llama
+    volumes:
+      - models:/models
+    ports:
+      - "127.0.0.1:8081:8081"
+    restart: unless-stopped
+
+  # Development helper: tests, linting and the eval runner with the source mounted.
+  #   docker compose --profile dev run --rm dev pytest
+  dev:
+    profiles: ["dev"]
+    build: { context: ./backend, target: dev }
+    image: support-agent-backend:dev
+    environment:
+      <<: *backend-env
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://support_app:${APP_DB_PASSWORD:-support_app}@db:5432/support_test
+      MIGRATION_DATABASE_URL: postgresql+psycopg://support:${POSTGRES_PASSWORD:-support}@db:5432/support_test
+      EVAL_DATABASE_URL: postgresql+psycopg://support_app:${APP_DB_PASSWORD:-support_app}@db:5432/support
+      EVAL_MIGRATION_DATABASE_URL: postgresql+psycopg://support:${POSTGRES_PASSWORD:-support}@db:5432/support
+    volumes:
+      - ./backend:/app
+      - models:/models
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  models:
