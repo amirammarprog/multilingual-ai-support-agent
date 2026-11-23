@@ -60,7 +60,7 @@ def render(run: dict[str, Any], results: list[dict[str, Any]], comparison: dict[
         delta = ""
         if comparison and key in comparison:
             d = comparison[key]["delta"]
-            delta = f"{'+' if d >= 0 else ''}{d * 100:.1f} pt"
+            delta = f"{round(d * 100, 1) + 0.0:+.1f} pt"  # + 0.0 turns -0.0 into 0.0
         lines.append(f"| {label} | {pct(o[key])} | {delta} |")
     agreement = o.get("judge_agreement")
     if agreement is not None and agreement < JUDGE_AGREEMENT_WARNING:

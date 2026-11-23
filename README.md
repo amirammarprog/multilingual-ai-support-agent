@@ -216,11 +216,12 @@ provider's console.
 How free tiers are handled: requests are paced per provider; 429, 5xx and network errors are retried with
 exponential backoff that honours `Retry-After`; a wait longer than `LLM_MAX_RETRY_WAIT_SECONDS` (a daily
 quota) fails fast. Reasoning models (gpt-oss, Qwen3) spend output tokens on hidden reasoning before the
-JSON answer, so `LLM_EXTRA_OUTPUT_TOKENS` adds headroom to every call, and an output the provider rejects
-as invalid JSON is regenerated once with a larger budget. In the evaluation, a case where a model call failed is not scored on the no-LLM fallback:
-it stays pending and the run is marked incomplete until `--resume` finishes it. Expect roughly 3–4 model
-calls per case (planner, responder, sometimes a second responder attempt, judge), so about 400–500 requests
-for the 130 cases.
+JSON answer, so `LLM_EXTRA_OUTPUT_TOKENS` adds headroom to every call. An output the provider rejects as
+invalid JSON is regenerated once with a larger budget, on the capable model when the cheap one failed. In
+the evaluation, a case where a model call failed is not scored on the no-LLM fallback: it stays pending and
+the run is marked incomplete until `--resume` finishes it. Expect roughly 3–4 model calls per case
+(planner, responder, sometimes a second responder attempt, judge), so about 400–500 requests for the 130
+cases.
 
 **Judge model.** By default the judge is the provider's smart model; `JUDGE_MODEL` (and optionally
 `JUDGE_BASE_URL`, `JUDGE_API_KEY`) points it elsewhere. A small free model can be a weak judge: the report
@@ -257,7 +258,7 @@ Everything runs in containers, so no local Python or Node install is needed.
 
 ```bash
 docker compose up -d db
-docker compose --profile dev run --rm dev pytest              # 196 tests: unit, integration, security
+docker compose --profile dev run --rm dev pytest              # 217 tests: unit, integration, security
 docker compose --profile dev run --rm dev ruff check .
 docker compose --profile dev run --rm dev python scripts/chat_cli.py "Où est ma commande BC-10421 ?" --customer BC-C-1001 --debug
 cd frontend && npm ci && npm run dev                           # http://localhost:5173, proxies /api to :8000
@@ -365,42 +366,84 @@ a hallucination rate of 0.02. The full mode runs when started by hand with an `L
 (see [Using a free API key](#using-a-free-api-key)). Full runs save every case as it finishes and can be
 resumed; the judge's agreement with the deterministic checks is reported so a weak judge is visible.
 
-### Results (real run, offline mode)
+### Results (real runs)
 
-Only measured numbers are reported. The **full mode (LLM agent + LLM judge) has not been run yet**: no API
-key was configured during development, and the free local model was too slow on the development CPU
-(about 0.4 tokens/s) to run 130 cases. Its results will be added here from a real run with a free-tier
-key. The scores below are for the offline mode, with no LLM at all.
+Only measured numbers are reported. Both runs use the same 130 cases and the code of commit `2142df5`
+(22–23 November 2026); the reports are [offline-latest.md](backend/evals/reports/offline-latest.md) and
+[full-latest.md](backend/evals/reports/full-latest.md).
 
-Run of 22 November 2026, [report](backend/evals/reports/offline-latest.md): **94/130 cases passed (72.3%)**.
+- **Offline**: rule-based planner and fixed templates, no LLM at all.
+- **Full**: LLM planner and responder on the Groq free tier, `openai/gpt-oss-20b` (fast) and
+  `openai/gpt-oss-120b` (capable), reasoning effort `low`, 20 requests/min; LLM judge
+  `qwen/qwen3.8-27b`. The run was stopped twice by Docker and resumed with `--resume`; no case was scored
+  twice or on the no-LLM fallback. Cost: free tier (Groq prices are not in `MODEL_PRICES`, so the report
+  shows $0).
 
-| Metric | Score |
-| --- | ---: |
-| Correctness | 75.4% |
-| Retrieval hit rate | 75.9% |
-| Retrieval MRR | 71.8% |
-| Faithfulness | 100.0% |
-| Hallucination rate | 0.8% (1 case) |
-| Language consistency | 96.2% |
-| Tool selection | 97.4% |
-| Tool execution | 96.9% |
-| Injection resistance | 100.0% |
-
-| Language | Cases | Pass rate |
+| Metric | Offline | Full |
 | --- | ---: | ---: |
-| Arabic | 20 | 75.0% |
-| Tunisian Arabic | 15 | 60.0% |
-| English | 62 | 72.6% |
-| French | 33 | 75.8% |
+| **Pass rate** (all checks of a case pass) | **73.8%** (96/130) | **66.9%** (87/130) |
+| Correctness (expected outcome and facts) | 76.9% | 80.0% |
+| Correctness by the LLM judge (score ≥ 4/5) | – | 76.9% |
+| Retrieval hit rate | 75.9% | 75.9% |
+| Retrieval MRR | 71.8% | 74.1% |
+| Faithfulness (no number outside the evidence) | 100.0% | 88.5% |
+| Hallucination rate (lower is better) | 0.8% | 11.5% (see the review below) |
+| Language consistency | 96.2% | 100.0% |
+| Tool selection | 97.4% | 86.8% |
+| Tool execution | 96.9% | 78.1% |
+| Injection / abuse resistance | 100.0% | 87.5% |
+| Judge agrees with the deterministic correctness check | – | 93.8% |
+| Latency, average / p95 | 0.9 s / 1.8 s | 4.8 s / 10.5 s |
 
-How to read this: orders, stock, products, hand-off, tickets, cross-customer access, injection and price
+| Language | Cases | Offline | Full |
+| --- | ---: | ---: | ---: |
+| Arabic | 20 | 80.0% | 75.0% |
+| Tunisian Arabic | 15 | 60.0% | 66.7% |
+| English | 62 | 74.2% | 64.5% |
+| French | 33 | 75.8% | 66.7% |
+
+**Offline mode.** Orders, stock, products, hand-off, tickets, cross-customer access, injection and price
 manipulation pass at or near 100% because they rely on tools and deterministic checks. Policy questions
-pass at 44%: without a model there is no query translation (an English question about the French-only
+pass at 48%: without a model there is no query translation (an English question about the French-only
 returns policy scores low in the reranker) and no answer writing (the quoted section can be in another
 language or miss the exact fact). The single hallucination-rate case is an answer quoting the closest
 catalogue section for a question about an unreleased product, where "I don't know" was expected. Some
 rule-based planner fixes were made after looking at failures in this dataset, so treat the offline score
 as a baseline, not as a held-out measurement.
+
+**Full mode.** The model helps where language matters: policy questions pass at 65% (48% offline),
+answers are always in the customer's language, and Tunisian Arabic improves. It is worse where the
+rule-based planner is exact: tool selection drops to 87% (for example a product search instead of
+fetching the exact SKU, or answering a stock question without `check_stock`), and several fixed-message
+cases fail on the judge (below). Most policy failures are the same in both modes: the right section ranks
+under the reranker threshold, so the agent says it doesn't know and offers a human. That is safe but
+unhelpful, and shipping questions are the weakest.
+
+**Review of the 15 cases counted as hallucinations** (the measured rate stays 11.5%):
+
+- **2 are real.** In `order-ar-01` the answer added a support e-mail address that is in no document (the
+  guardrail checks numbers, not e-mail addresses). In `ship-fr-01` the delivery time to Bizerte was given
+  as 1–2 days, which is the Grand Tunis time; the document says 2–4 days for other governorates.
+- **2 are wrong actions in Tunisian Arabic.** A request for a 100% discount (`price-tn-01`) and a question
+  about returning opened earphones (`ret-tn-01`) were routed to ticket creation, so the agent asked for an
+  e-mail address instead of refusing or answering.
+- **11 are fixed template messages** (greetings, the price refusal, the order verification request,
+  "order not found", the out-of-scope message) from
+  [`app/agent/templates.py`](backend/app/agent/templates.py). They name the shop and what the assistant
+  can do, and the judge only sees retrieved chunks and tool results as evidence, so it marks those words
+  as unsupported. No model wrote them. This is a limit of the judge setup.
+
+**Security.** No case showed another customer's or another shop's data, and no price changed (no tool can
+change one). The two injection-resistance failures are wrong outcomes, not leaks: `price-tn-01` above,
+and `xcust-en-03` (an order of another shop got the out-of-scope message instead of a request for the
+right account details).
+
+**Free models and the judge.** Groq rejected the JSON written by `gpt-oss-20b` 44 times in this run;
+each answer was redone on `gpt-oss-120b`, so many fast-tier answers were written by the larger model. The
+judge's own output was rejected 21 times, and 7 judge calls failed after retries; those cases were
+resumed until they were judged. The judge agrees with the deterministic correctness check on 93.8% of
+cases, above the 70% warning threshold. Its faithfulness verdicts are less reliable: the 11 template
+cases above are false alarms.
 
 ## Configuration
 
@@ -424,7 +467,11 @@ static app and `widget.js` with security headers and proxies `/api` and `/mcp`. 
 
 ## Limitations and next steps
 
-- The full LLM evaluation has not been run (no API key during development); only offline results exist.
+- The full LLM evaluation was run once, on free-tier models (see [Results](#results-real-runs)). Known gaps
+  from it: the output guardrail checks numbers but not e-mail addresses or links (one invented support
+  address got through); the LLM planner picks tools less exactly than the rule-based one; the judge does
+  not see the shop profile or the fixed messages, so it flags template answers as unsupported; the
+  reranker threshold leaves some answerable shipping and returns questions as "I don't know".
 - On CPU, local models are slow: the reranker adds about 1–3 s per knowledge question, and the bundled
   Qwen3-1.7B option needs a much faster machine than the development laptop to be usable.
 - Local Whisper `base` is fast but makes mistakes, especially in Arabic; `WHISPER_MODEL=small` or the
